@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 
-export default function AccountProfilePage() {
+function AccountProfileContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
@@ -153,5 +153,17 @@ export default function AccountProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AccountProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    }>
+      <AccountProfileContent />
+    </Suspense>
   );
 }
