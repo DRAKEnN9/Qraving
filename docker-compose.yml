@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: qr-menu-mongodb
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+    networks:
+      - qr-menu-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qr-menu-app
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/qr-menu-manager?authSource=admin
+      - NEXTAUTH_URL=http://localhost:3000
+      - NODE_ENV=development
+    env_file:
+      - .env.local
+    depends_on:
+      - mongodb
+    networks:
+      - qr-menu-network
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+
+volumes:
+  mongodb_data:
+
+networks:
+  qr-menu-network:
+    driver: bridge

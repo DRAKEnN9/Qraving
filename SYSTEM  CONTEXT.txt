@@ -1,0 +1,140 @@
+SYSTEM / CONTEXT:
+You are a senior full-stack engineer and product designer building a production-ready micro-SaaS called "QR Menu Manager". The app must implement both Owner and Customer workflows described below. Build a single repository that can be run locally and deployed on Vercel (frontend) and a Node/Express server (or use Next.js API routes) with MongoDB Atlas. Provide tests, docs, and deployment scripts.
+
+HIGH-LEVEL PRODUCT REQUIREMENTS:
+- Owner features:
+  - Signup / Login (email+password + Google OAuth).
+  - Restaurant setup: name, address, logo, number of tables in there restaurant, categories.
+  - Stripe onboarding / connect flow to accept payments and subscriptions.
+  - Unique QR code per restaurant that opens a customer-facing menu page (same QR even after menu edits).
+  - Drag-and-drop menu builder (React): CRUD menu items (name, description, price, photos, tags, options modifiers like spicy/non-spicy), orderable toggle for each item, sold-out toggle, categories ordering. Real-time preview of customer page.
+  - Orders view: incoming orders with customer name, table number, Gmail ID, items, totals, payment status. Confirm/Update order status (Received → Preparing → Ready → Completed). Search + filter by status/time.
+  - Send confirmation emails on payment + status updates using SendGrid (or Nodemailer with Gmail). Use verified "from" address and templated emails.
+  - Simple analytics: scans, total orders, revenue, top items. Pro tier ($19/mo) shows peak times and table turnover.
+  - Billing: subscriptions (Stripe), basic billing UI ($9/mo basic, $19/mo pro).
+  - Notifications: in-app order alerts and optional email alerts.
+- Customer features:
+  - Mobile-first, responsive menu page opened by QR code.
+  - Browse items, add to cart, choose quantity, modifiers, special requests.
+  - One-time order form: name, table number, Gmail ID (required for email confirmations).
+  - Checkout using Stripe Checkout (hosted page). Payment must succeed before order registration.
+  - After payment redirect to order confirmation page. If the owner updates status, customer receives email and optionally real-time update if the confirmation page is still open.
+  - No account or password required for customers.
+- Real-time:
+  - Owner dashboard sees new orders instantly.
+  - If customer keeps order page open, they see status updates in real-time (Socket.io or Pusher).
+- Admin / Ops:
+  - Admin seed data script, ability to run locally with sample restaurants and orders.
+  - Logging for Stripe webhooks, and verification of webhooks signatures.
+  - Rate limit endpoints and basic security rules (CORS, auth middleware).
+- Hosting & infra:
+  - Use Vercel for frontend/Next, Node/Express for API if separate; MongoDB Atlas for DB; Cloudinary/S3 for images; Stripe for payments/subscriptions.
+  - Dockerfile and a simple docker-compose dev setup optional.
+- Accessibility & UX:
+  - Mobile-first, WCAG AA basic accessibility, keyboard navigation for menu editor and dashboard.
+  - Fast performance (lazy-load images, small bundle).
+- Security & privacy:
+  - Validate/escape user input, sanitize file uploads, PCI compliant pattern via Stripe Checkout (no card data stored), GDPR note for storing customer emails.
+- Tests & Quality:
+  - Unit tests for key backend logic, E2E test for end-to-end ordering flow (Cypress or Playwright).
+  - Linting and Prettier config.
+- Deliverables:
+  - Working Git repo with clear README (setup, env variables, seed, run, deploy).
+  - Postman or OpenAPI spec describing all API endpoints.
+  - Seed script with sample owner and demo QR code, screenshots of UI.
+  - Acceptance criteria checklist.
+
+UI / DESIGN SPECIFICATIONS:
+- Style: modern, minimal, clean — white/soft gray background, neutral text, indigo or teal accent. Use Tailwind CSS.
+- Components:
+  - Owner Dashboard: top nav with subscription status, left nav (Dashboard, Menu Builder, Orders, Analytics, Settings, Billing), main content area, order queue card list, modal for order details.
+  - Menu Builder: category list at left, canvas on right; drag-and-drop reorder; item editor panel slide-in with image upload, price, description, toggles (orderable, sold out), modifiers list, save/publish button with live preview.
+  - Customer Menu: simple header (restaurant name + logo), categories accordion, item cards with add-to-cart, cart bottom sheet, checkout CTA.
+  - QR Page: readable short URL / share buttons.
+- Micro-interactions: subtle transitions, toast notifications, loading skeletons.
+- Icons: use lucide-react or Heroicons.
+
+DATA MODELS (MongoDB):
+- User { _id, name, email, passwordHash, googleId?, role: ['owner','admin'], createdAt }
+- Restaurant { _id, ownerId, name, tableNumber, slug, logoUrl, settings, stripeAccountId, qrCodeUrl, createdAt }
+- Category { _id, restaurantId, name, order }
+- MenuItem { _id, restaurantId, categoryId, name, description, priceCents, images[], orderable:bool, soldOut:bool, modifiers:[{name, priceDelta}], order }
+- Order { _id, restaurantId, items:[{menuItemId, name, priceCents, quantity, modifiers}], totalCents, currency, customerName, tableNumber, customerEmail, stripePaymentIntentId, paymentStatus, status, createdAt }
+- Subscription { _id, ownerId, stripeSubscriptionId, tier, status, currentPeriodEnd }
+- webhook_logs { "_id": ObjectId, "provider": "stripe", "eventId": String, "rawPayload": Object, "signatureVerified": Boolean, "handled": Boolean, "receivedAt": Date, "handledAt": Date, "notes": String }
+etc...(if needed)
+
+API ENDPOINTS (examples — return JSON/errors):
+- POST /api/auth/signup
+- POST /api/auth/login
+- GET /api/restaurant/:slug/menu  --> public customer menu
+- POST /api/restaurant/:id/orders  --> create order after Stripe returns success (or via webhook)
+- POST /api/webhooks/stripe  --> verify signature, create order or update payment status
+- GET /api/owner/:id/orders
+- PATCH /api/owner/orders/:orderId/status
+- POST /api/owner/menu-items (CRUD)
+- GET /api/owner/analytics
+etc...
+
+REAL-TIME EVENTS (Socket.io / Pusher):
+- owner:<restaurantId>:new_order -> payload: order summary
+- owner:<restaurantId>:order_update -> payload: status
+- customer:<orderId>:status_update -> payload: status
+
+IMPLEMENTATION NOTES / LIBRARIES:
+- Next.js for frontend + API routes OR React + separate Express backend.
+- Tailwind CSS for styling; Headless UI for accessible components; react-beautiful-dnd or dnd-kit for drag/drop.
+- Stripe Checkout + Stripe Connect for owner payouts.
+- Socket.io for real-time, fallback to polling for minimal MVP if needed.
+- Multer + Cloudinary or S3 SDK for image upload.
+- Use zod or Joi for request validation.
+- Use Nodemailer (with OAuth) or SendGrid for emails.
+- Use Docker for reproducible dev environment.
+
+MVP SCOPE (priority 1):
+1) Owner signup + restaurant setup + QR code generation.
+2) Drag-and-drop menu builder with CRUD for items (images optional).
+3) Customer mobile menu page + cart + Stripe Checkout flow + order insertion after payment confirmation via Stripe webhook.
+4) Owner order queue: see incoming orders, change status, send email notifications.
+5) Real-time updates (Socket.io) for owner + customer.
+6) Basic analytics dashboard (orders, revenue, popular items).
+7) README, seed data, Postman/OpenAPI, one E2E test for order flow.
+
+ACCEPTANCE CRITERIA (pass/fail tests):
+- Owner can create account, add a restaurant, get a stable QR code, and edit menu items. Edits reflect in customer menu immediately.
+- Customer scans QR, places an order, completes payment via Stripe Checkout. Order is created, and appears in owner dashboard within 5 seconds.
+- Owner can update order status; customer receives email and real-time update (if page is open).
+- Stripe webhooks are verified by checking signatures; logs show webhook handling success.
+- Basic analytics page shows total orders and revenue for last 30 days.
+- README contains env variables, local run steps, seed instructions, and deploy steps to Vercel/Heroku.
+
+TESTS & QA:
+- Unit tests for menu CRUD, order creation logic, and Stripe webhook handling.
+- E2E test that:
+  1) seeds owner & restaurant,
+  2) opens customer menu,
+  3) adds item to cart,
+  4) completes a mocked Stripe success,
+  5) verifies order shown in owner dashboard and email stub received.
+- Lint and format with ESLint + Prettier.
+
+NON-FUNCTIONAL REQUIREMENTS:
+- Mobile-first, <2s first contentful paint on 4G emulation.
+- WCAG AA basics (color contrast, labels).
+- Secure: env vars for secrets, validate webhooks, sanitize inputs.
+
+DELIVERABLES (clear list for PR/checklist):
+1. Git repository (feature branches) with all source code.
+2. README with env variables, seed scripts, run & deploy steps.
+3. OpenAPI / Postman collection.
+4. Seed data generator and sample QR code URL for demo restaurant.
+5. Unit + E2E tests, and CI workflow (GitHub Actions).
+6. Short design screenshots (owner dashboard, menu builder, customer menu).
+7. Developer checklist + acceptance test script.
+
+FINAL NOTES TO DEVELOPER:
+- Keep scope small for MVP. Where real-time or image uploads slow progress, implement simplified fallbacks (polling, image URL input).
+- Annotate TODOs for future pro features (table management, receipts, multi-menu per shift).
+- Aim for code clarity and README so the repo is deployable by another developer.
+
+Generate the full repo scaffold, implement the MVP features above, add tests, and provide a short runbook for a maintainer to deploy and operate the service.
