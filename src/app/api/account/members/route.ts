@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
     const normalizedEmail = String(email).toLowerCase().trim();
     // Always invite as admin; never allow inviting 'owner'
-    const normalizedRole: 'admin' = 'admin';
+    const normalizedRole = 'admin' as const;
 
     const existingUser = await User.findOne({ email: normalizedEmail }).lean();
     const { token, hash } = generateInviteToken();

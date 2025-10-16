@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     const email = member.email.toLowerCase();
     // Force invited users to have admin role to ensure scoped access
-    const role: 'admin' = 'admin';
+    const role = 'admin' as const;
 
     // Create or update user
     let user = await User.findOne({ email }).select('+passwordHash');

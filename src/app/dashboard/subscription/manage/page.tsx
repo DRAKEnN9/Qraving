@@ -116,6 +116,12 @@ export default function ManageSubscriptionPage() {
     }
   };
 
+  const blocked = user?.accountRole !== 'owner';
+
+  useEffect(() => {
+    if (blocked) setLoading(false);
+  }, [blocked]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -123,12 +129,6 @@ export default function ManageSubscriptionPage() {
       </div>
     );
   }
-
-  const blocked = user?.accountRole !== 'owner';
-
-  useEffect(() => {
-    if (blocked) setLoading(false);
-  }, [blocked]);
 
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950">

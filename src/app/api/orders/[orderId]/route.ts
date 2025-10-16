@@ -3,10 +3,10 @@ import dbConnect from '@/lib/mongodb';
 import Order from '@/models/Order';
 import Restaurant from '@/models/Restaurant';
 
-export async function GET(_req: NextRequest, { params }: { params: { orderId: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
   try {
     await dbConnect();
-    const { orderId } = params;
+    const { orderId } = await params;
 
     const orderDoc = await Order.findById(orderId).lean();
     if (!orderDoc) {
