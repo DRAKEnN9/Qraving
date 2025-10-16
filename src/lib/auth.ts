@@ -12,6 +12,12 @@ export interface TokenPayload {
   role: string;
 }
 
+// Strongly-typed Next.js route handler used by wrappers below
+export type RouteHandler = (
+  request: NextRequest & { user?: TokenPayload },
+  context?: Record<string, unknown>
+) => Promise<Response> | Response;
+
 /**
  * Hash a password
  */
@@ -70,8 +76,8 @@ export function getUserFromRequest(request: NextRequest): TokenPayload | null {
 /**
  * Middleware to protect API routes
  */
-export function requireAuth(handler: Function) {
-  return async (request: NextRequest, context?: any) => {
+export function requireAuth(handler: RouteHandler) {
+  return async (request: NextRequest, context?: Record<string, unknown>) => {
     const user = getUserFromRequest(request);
 
     if (!user) {
@@ -79,26 +85,26 @@ export function requireAuth(handler: Function) {
     }
 
     // Attach user to request for use in handler
-    (request as any).user = user;
+    (request as unknown as { user?: TokenPayload }).user = user;
 
-    return handler(request, context);
+    return handler(request as NextRequest & { user: TokenPayload }, context);
   };
 }
 
 /**
  * Middleware to require owner role
  */
-export function requireOwner(handler: Function) {
-  return async (request: NextRequest, context?: any) => {
+export function requireOwner(handler: RouteHandler) {
+  return async (request: NextRequest, context?: Record<string, unknown>) => {
     const user = getUserFromRequest(request);
 
     if (!user || user.role !== 'owner') {
       return Response.json({ error: 'Forbidden - Owner access required' }, { status: 403 });
     }
 
-    (request as any).user = user;
+    (request as unknown as { user?: TokenPayload }).user = user;
 
-    return handler(request, context);
+    return handler(request as NextRequest & { user: TokenPayload }, context);
   };
 }
 

@@ -55,7 +55,7 @@ export function getIO(): SocketIOServer | null {
 /**
  * Emit new order event to restaurant owners
  */
-export function emitNewOrder(restaurantId: string, orderData: any) {
+export function emitNewOrder(restaurantId: string, orderData: unknown) {
   if (io) {
     io.to(`restaurant:${restaurantId}`).emit('new-order', orderData);
   }
@@ -73,7 +73,7 @@ export function emitOrderStatusUpdate(orderId: string, status: string) {
 /**
  * Emit order status update to restaurant owners
  */
-export function emitOrderUpdate(restaurantId: string, orderData: any) {
+export function emitOrderUpdate(restaurantId: string, orderData: unknown) {
   if (io) {
     io.to(`restaurant:${restaurantId}`).emit('order-update', orderData);
   }

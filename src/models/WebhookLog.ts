@@ -3,7 +3,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 export interface IWebhookLog extends Document {
   provider: string;
   eventId: string;
-  rawPayload: any;
+  rawPayload: unknown;
   signatureVerified: boolean;
   handled: boolean;
   receivedAt: Date;
