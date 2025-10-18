@@ -17,8 +17,9 @@ export async function GET(request: NextRequest) {
     await dbConnect();
     const members = await AccountMember.find({ ownerId }).sort({ createdAt: -1 }).lean();
     return NextResponse.json({ members });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || 'Internal server error' }, { status: 500 });
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : 'Internal server error';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -99,8 +100,9 @@ export async function PATCH(request: NextRequest) {
     if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     return NextResponse.json({ member: updated });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || 'Internal server error' }, { status: 500 });
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : 'Internal server error';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 

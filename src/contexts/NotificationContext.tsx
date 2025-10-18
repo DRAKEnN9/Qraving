@@ -156,7 +156,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   useEffect(() => {
     if (!socket || !isConnected) return;
 
-    const handleNewOrder = (data: any) => {
+    const handleNewOrder = (data: { orderNumber: string; customerName: string; itemCount: number }) => {
       console.log('New order received:', data);
 
       // Only show notifications if user is a restaurant owner/admin
@@ -199,7 +199,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       );
     };
 
-    const handleOrderStatusUpdate = (data: any) => {
+    const handleOrderStatusUpdate = (data: { orderNumber: string; status: string }) => {
       console.log('Order status updated:', data);
       
       // Show toast for status updates
@@ -226,7 +226,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       socket.emit('join-user', user.id);
     }
 
-    const handleMemberRemoved = (data: any) => {
+    const handleMemberRemoved = (data: { userId: string; reason?: string }) => {
       // Show actionable toast and then logout + redirect
       const tId = toast(
         <div>
