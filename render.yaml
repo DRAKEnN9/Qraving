@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: qr-menu-manager
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NPM_CONFIG_LEGACY_PEER_DEPS
+        value: true
