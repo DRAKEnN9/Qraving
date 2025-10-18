@@ -1,12 +1,6 @@
-@import "tailwindcss";
-
-/* Configure Tailwind v4 */
-@theme {
-  --default-transition-duration: 150ms;
-}
-
-/* Enable class-based dark mode */
-@variant dark (html.dark &);
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 :root {
   --background: #ffffff;
