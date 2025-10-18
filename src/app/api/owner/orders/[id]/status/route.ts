@@ -5,7 +5,6 @@ import Restaurant from '@/models/Restaurant';
 import { getUserFromRequest } from '@/lib/auth';
 import { resolveEffectiveOwnerId } from '@/lib/ownership';
 import { updateOrderStatusSchema } from '@/lib/validation';
-import { sendEmail, orderStatusUpdateEmail } from '@/lib/email';
 
 // PATCH update order status
 export async function PATCH(
@@ -44,36 +43,22 @@ export async function PATCH(
     order.status = validatedData.status;
     await order.save();
 
-    // Send email ONLY when order moves to 'preparing'
-    if (order.status === 'preparing') {
-      try {
-        const emailData = orderStatusUpdateEmail({
-          customerName: order.customerName,
-          restaurantName: restaurant.name,
-          orderNumber: String(order._id).slice(-8).toUpperCase(),
-          status: order.status,
-          tableNumber: order.tableNumber,
-        });
-
-        await sendEmail({
-          to: order.customerEmail,
-          subject: emailData.subject,
-          html: emailData.html,
-          text: emailData.text,
-        });
-      } catch (emailError) {
-        console.error('Error sending status update email:', emailError);
-        // Don't fail the request if email fails
-      }
-    }
 
     // Emit real-time notification via Socket.io
     if (global.io) {
-      global.io.to(`restaurant:${order.restaurantId}`).emit('order-status-updated', {
+      const orderUpdateData = {
         orderId: String(order._id),
         orderNumber: String(order._id).slice(-8).toUpperCase(),
         status: order.status,
-      });
+      };
+
+      // Notify restaurant staff
+      global.io.to(`restaurant:${order.restaurantId}`).emit('order-status-updated', orderUpdateData);
+      
+      // Notify customer waiting for this specific order
+      global.io.to(`order:${String(order._id)}`).emit('order-status-updated', orderUpdateData);
+      
+      console.log(`Socket.io notifications sent for order ${String(order._id)} status: ${order.status}`);
     }
 
     return NextResponse.json({

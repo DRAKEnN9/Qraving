@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -28,7 +28,7 @@ interface Restaurant {
   createdAt: string;
 }
 
-export default function RestaurantsPage() {
+function RestaurantsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -289,7 +289,7 @@ export default function RestaurantsPage() {
                         QR Code
                       </Link>
                       <Link
-                        href={`/dashboard/menu-builder/${r._id}`}
+                        href={`/dashboard/restaurants/${r._id}/menu`}
                         className="flex w-full items-center justify-center rounded-lg bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                       >
                         Manage Menu
@@ -418,7 +418,7 @@ export default function RestaurantsPage() {
                       QR Code
                     </Link>
                     <Link
-                      href={`/dashboard/menu-builder/${restaurant._id}`}
+                      href={`/dashboard/restaurants/${restaurant._id}/menu`}
                       className="flex w-full items-center justify-center rounded-lg bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     >
                       Manage Menu
@@ -441,5 +441,13 @@ export default function RestaurantsPage() {
         {/* Removed quick stats for a cleaner, focused UI */}
       </div>
     </div>
+  );
+}
+
+export default function RestaurantsPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+      <RestaurantsPageContent />
+    </Suspense>
   );
 }

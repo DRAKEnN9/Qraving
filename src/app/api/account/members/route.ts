@@ -5,7 +5,6 @@ import { resolveAccountOwnerPrivilege } from '@/lib/ownership';
 import AccountMember from '@/models/AccountMember';
 import User from '@/models/User';
 import { generateInviteToken } from '@/lib/token';
-import { sendEmail } from '@/lib/email';
 
 // List members
 export async function GET(request: NextRequest) {
@@ -61,31 +60,6 @@ export async function POST(request: NextRequest) {
     const appUrl = process.env.APP_URL || 'http://localhost:3000';
     const link = `${appUrl}/invite/register?memberId=${encodeURIComponent(String(member._id))}&token=${encodeURIComponent(token)}&email=${encodeURIComponent(normalizedEmail)}`;
 
-    try {
-      // Fire-and-forget email (best-effort). If email not configured, it will log.
-      const subject = `You're invited to manage an account on QR Menu Manager`;
-      const roleLabel = 'Manager';
-      const html = `
-        <div style="font-family: Arial, sans-serif; line-height:1.6; max-width:600px; margin:0 auto">
-          <h2 style="color:#0ea5e9;">Invitation to join</h2>
-          <p>You have been invited as <strong>${roleLabel}</strong> to help manage a restaurant on <strong>QR Menu Manager</strong>.</p>
-          <p>Your invite email: <strong>${normalizedEmail}</strong></p>
-          <p style="margin:24px 0">
-            <a href="${link}"
-              style="background:#10b981;color:#fff;padding:12px 16px;border-radius:8px;text-decoration:none;display:inline-block">
-              Accept Invite & Create Password
-            </a>
-          </p>
-          <p>If the button doesn't work, copy and paste this link into your browser:</p>
-          <p style="word-break:break-all;color:#334155">${link}</p>
-          <p style="color:#64748b;font-size:12px">If you didn't expect this, you can safely ignore this email.</p>
-        </div>
-      `;
-      await sendEmail({ to: normalizedEmail, subject, html, text: `You're invited to manage an account. Open: ${link}` });
-    } catch (e) {
-      // Do not fail the invite if email fails; the link is returned to the client.
-      console.warn('Invite email send failed:', e);
-    }
 
     return NextResponse.json({ member, inviteLink: link });
   } catch (e: any) {

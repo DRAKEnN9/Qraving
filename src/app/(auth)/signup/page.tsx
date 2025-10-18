@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function SignupPage() {
+function SignupPageContent() {
   const router = useRouter();
   const search = useSearchParams();
   const selectedPlan = (search.get('plan') === 'advance' ? 'advance' : 'basic');
@@ -131,5 +131,13 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+      <SignupPageContent />
+    </Suspense>
   );
 }

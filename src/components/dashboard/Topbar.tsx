@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Search,
@@ -28,7 +28,7 @@ interface TopbarProps {
   onOpenMobileSidebar?: () => void;
 }
 
-export default function Topbar({ user, onLogout, sidebarCollapsed, onOpenMobileSidebar }: TopbarProps) {
+function TopbarContent({ user, onLogout, sidebarCollapsed, onOpenMobileSidebar }: TopbarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
@@ -130,7 +130,7 @@ export default function Topbar({ user, onLogout, sidebarCollapsed, onOpenMobileS
               <div className="absolute right-0 mt-2 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900">
                 <button
                   onClick={() => {
-                    router.push('/dashboard/menu-builder?action=new-category');
+                    router.push('/dashboard/menu-builder');
                     setQuickActionsOpen(false);
                   }}
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -140,7 +140,7 @@ export default function Topbar({ user, onLogout, sidebarCollapsed, onOpenMobileS
                 </button>
                 <button
                   onClick={() => {
-                    router.push('/dashboard/menu-builder?action=new-item');
+                    router.push('/dashboard/menu-builder');
                     setQuickActionsOpen(false);
                   }}
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -257,5 +257,13 @@ export default function Topbar({ user, onLogout, sidebarCollapsed, onOpenMobileS
         </div>
       </div>
     </header>
+  );
+}
+
+export default function Topbar(props: TopbarProps) {
+  return (
+    <Suspense fallback={<div className="h-16 border-b bg-white"></div>}>
+      <TopbarContent {...props} />
+    </Suspense>
   );
 }

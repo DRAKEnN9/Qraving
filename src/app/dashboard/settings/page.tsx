@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Store,
   Bell,
-  CreditCard,
   Users,
   Globe,
   Mail,
@@ -15,8 +14,6 @@ import {
   Clock,
   DollarSign,
   Save,
-  Smartphone,
-  MessageSquare,
   Check,
   X,
 } from 'lucide-react';
@@ -25,9 +22,6 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 interface Settings {
   notifications: {
-    email: boolean;
-    sms: boolean;
-    whatsapp: boolean;
     orderReceived: boolean;
     orderCompleted: boolean;
     dailySummary: boolean;
@@ -159,14 +153,9 @@ interface Settings {
     timezone: string;
     openingHours: string;
   };
-  payment: {
-    razorpayConnected: boolean;
-    bankAccount: string;
-    upiId: string;
-  };
 }
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
@@ -174,14 +163,11 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [restaurantId, setRestaurantId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'restaurant' | 'notifications' | 'payment' | 'team'>(
+  const [activeTab, setActiveTab] = useState<'restaurant' | 'notifications' | 'team'>(
     'restaurant'
   );
   const [settings, setSettings] = useState<Settings>({
     notifications: {
-      email: true,
-      sms: false,
-      whatsapp: false,
       orderReceived: true,
       orderCompleted: true,
       dailySummary: true,
@@ -195,11 +181,6 @@ export default function SettingsPage() {
       currency: 'INR',
       timezone: 'Asia/Kolkata',
       openingHours: '9:00 AM - 10:00 PM',
-    },
-    payment: {
-      razorpayConnected: false,
-      bankAccount: '',
-      upiId: '',
     },
   });
   const [saveMessage, setSaveMessage] = useState('');
@@ -242,7 +223,6 @@ export default function SettingsPage() {
     if (
       tabParam === 'restaurant' ||
       tabParam === 'notifications' ||
-      tabParam === 'payment' ||
       tabParam === 'team'
     ) {
       setActiveTab(tabParam);
@@ -275,11 +255,6 @@ export default function SettingsPage() {
             currency: restaurant.settings?.currency || 'INR',
             timezone: restaurant.settings?.timezone || 'Asia/Kolkata',
             openingHours: restaurant.settings?.openingHours || '9:00 AM - 10:00 PM',
-          },
-          payment: {
-            ...prev.payment,
-            upiId: restaurant.paymentInfo?.upiId || '',
-            bankAccount: restaurant.paymentInfo?.accountHolderName || '',
           },
         }));
       }
@@ -349,19 +324,37 @@ export default function SettingsPage() {
       setTeamLoading(true);
       setTeamError('');
       const token = localStorage.getItem('token');
+      
+      console.log('Fetching team data...');
+      
       // fetch my role
       const meRes = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+      console.log('Auth response status:', meRes.status);
+      
+      if (!meRes.ok) {
+        throw new Error(`Authentication failed (${meRes.status})`);
+      }
+      
       const me = await meRes.json().catch(() => ({}));
+      console.log('User data:', me);
+      
       const accRole = me?.user?.accountRole || me?.user?.role;
       if (accRole === 'owner' || accRole === 'admin') setMyRole(accRole);
+      
       // fetch members
       const res = await fetch('/api/account/members', {
         headers: { Authorization: `Bearer ${token}` },
       });
+      
+      console.log('Members response status:', res.status);
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load members');
+      if (!res.ok) throw new Error(data.error || `Failed to load members (${res.status})`);
+      
+      console.log('Members data:', data);
       setMembers(data.members || []);
     } catch (e: any) {
+      console.error('Team fetch error:', e);
       setTeamError(e.message || 'Failed to load members');
     } finally {
       setTeamLoading(false);
@@ -503,7 +496,6 @@ export default function SettingsPage() {
   const tabs = [
     { id: 'restaurant' as const, label: 'Restaurant Profile', icon: Store },
     { id: 'notifications' as const, label: 'Notifications', icon: Bell },
-    { id: 'payment' as const, label: 'Payment & Payouts', icon: CreditCard },
     { id: 'team' as const, label: 'Team & Access', icon: Users },
   ];
 
@@ -756,47 +748,14 @@ export default function SettingsPage() {
           <div className="space-y-6">
             <div>
               <h2 className="mb-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
-                Notification Channels
+                Notification Preferences
               </h2>
               <div className="space-y-4">
-                {[
-                  { key: 'email' as const, label: 'Email Notifications', icon: Mail },
-                  { key: 'sms' as const, label: 'SMS Notifications', icon: Smartphone },
-                  {
-                    key: 'whatsapp' as const,
-                    label: 'WhatsApp Notifications',
-                    icon: MessageSquare,
-                  },
-                ].map((channel) => {
-                  const Icon = channel.icon;
-                  return (
-                    <div
-                      key={channel.key}
-                      className="flex flex-col gap-3 rounded-lg border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="rounded-lg bg-emerald-100 p-2">
-                          <Icon className="h-5 w-5 text-emerald-600" />
-                        </div>
-                        <span className="font-medium text-slate-900 dark:text-slate-100">
-                          {channel.label}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => toggleNotification(channel.key)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          settings.notifications[channel.key] ? 'bg-emerald-600' : 'bg-slate-300'
-                        } sm:ml-4`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            settings.notifications[channel.key] ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  );
-                })}
+                <div className="rounded-lg border border-slate-200 p-4 text-center">
+                  <p className="text-slate-600 dark:text-slate-400">
+                    Notification channels have been disabled. All notifications will be handled through the web interface.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -853,106 +812,6 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Payment Tab */}
-        {activeTab === 'payment' && (
-          <div className="relative space-y-6">
-            {/* Owner-only overlay */}
-            {user?.accountRole !== 'owner' && (
-              <div className="pointer-events-auto absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/70 backdrop-blur-sm">
-                <div className="mx-4 max-w-lg rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-2xl">
-                  <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                    <CreditCard className="h-5 w-5" />
-                  </div>
-                  <h2 className="mb-2 text-xl font-bold text-slate-900">
-                    Payments & Payouts (Owner Access Only)
-                  </h2>
-                  <p className="text-sm text-slate-600">
-                    For security, financial settings such as payment integrations and payout details
-                    are restricted to the account owner. Please contact the owner if you need
-                    assistance.
-                  </p>
-                </div>
-              </div>
-            )}
-            <div>
-              <h2 className="mb-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
-                Payment Integration
-              </h2>
-              <div
-                className={`rounded-lg border border-slate-200 p-6 ${user?.accountRole !== 'owner' ? 'pointer-events-none select-none blur-sm' : ''}`}
-              >
-                <div className="flex flex-col gap-4 sm:flex-row">
-                  <div className="rounded-lg bg-blue-100 p-3">
-                    <CreditCard className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="mb-2 font-semibold text-slate-900 dark:text-slate-100">
-                      Razorpay
-                    </h3>
-                    <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
-                      Connect your Razorpay account to accept online payments
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`rounded-full px-3 py-1 text-sm font-medium ${
-                          settings.payment.razorpayConnected
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                        }`}
-                      >
-                        {settings.payment.razorpayConnected ? 'Connected' : 'Not Connected'}
-                      </div>
-                      <button className="text-sm font-medium text-emerald-600 hover:text-emerald-700">
-                        {settings.payment.razorpayConnected ? 'Manage' : 'Connect Now'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className={`${user?.accountRole !== 'owner' ? 'pointer-events-none select-none blur-sm' : ''}`}
-            >
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">Payout Information</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Bank Account Number
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.payment.bankAccount}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        payment: { ...prev.payment, bankAccount: e.target.value },
-                      }))
-                    }
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                    placeholder="Enter your bank account number"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">UPI ID</label>
-                  <input
-                    type="text"
-                    value={settings.payment.upiId}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        payment: { ...prev.payment, upiId: e.target.value },
-                      }))
-                    }
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                    placeholder="yourname@upi"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Team Tab */}
         {activeTab === 'team' && (
@@ -1170,5 +1029,13 @@ export default function SettingsPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+      <SettingsPageContent />
+    </Suspense>
   );
 }

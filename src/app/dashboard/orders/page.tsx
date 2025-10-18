@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Clock, 
-  Check, 
-  AlertCircle, 
-  Package, 
+import {
+  Clock,
+  Check,
+  AlertCircle,
+  Package,
   ChefHat,
   CheckCircle,
   XCircle,
@@ -21,7 +21,8 @@ import {
   Bell,
   BellOff,
   Volume2,
-  VolumeX
+  VolumeX,
+  Store,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useSocket } from '@/contexts/SocketContext';
@@ -64,7 +65,8 @@ const statusConfig = {
   preparing: {
     label: 'Preparing',
     icon: ChefHat,
-    color: 'bg-teal-100 text-teal-800 border-teal-200',
+    color:
+      'bg-teal-100 text-teal-800 border-teal-200 animate-pulse shadow-lg shadow-teal-500/30 ring-2 ring-teal-400/20',
     iconColor: 'text-teal-600',
     dotColor: 'bg-teal-500',
   },
@@ -84,7 +86,7 @@ const statusConfig = {
   },
 };
 
-export default function OrdersPage() {
+function OrdersPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { socket, isConnected, joinRestaurant } = useSocket();
@@ -141,7 +143,7 @@ export default function OrdersPage() {
           setCurrency(firstRestaurant?.settings?.currency || 'INR');
           setError('');
         } else {
-          setError('No restaurant found');
+          setError('no_restaurant');
           setLoading(false);
         }
       } catch (e: any) {
@@ -264,9 +266,7 @@ export default function OrdersPage() {
 
       // Update local state
       setOrders((prev) =>
-        prev.map((order) =>
-          order._id === orderId ? { ...order, status: newStatus } : order
-        )
+        prev.map((order) => (order._id === orderId ? { ...order, status: newStatus } : order))
       );
 
       if (selectedOrder?._id === orderId) {
@@ -287,7 +287,7 @@ export default function OrdersPage() {
 
   const filteredOrders = orders.filter((order) => {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    const orderNumberSafe = (order.orderNumber || String(order._id).slice(-8).toUpperCase());
+    const orderNumberSafe = order.orderNumber || String(order._id).slice(-8).toUpperCase();
     const matchesSearch =
       searchQuery === '' ||
       orderNumberSafe.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -324,7 +324,7 @@ export default function OrdersPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Header */}
-      <div className="border-b border-slate-200 bg-white/90 backdrop-blur-md shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+      <div className="border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -333,7 +333,7 @@ export default function OrdersPage() {
                 Manage incoming orders in real-time
                 {isConnected && (
                   <span className="ml-2 inline-flex items-center gap-1 text-xs font-medium text-green-600">
-                    <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
                     Live
                   </span>
                 )}
@@ -367,11 +367,7 @@ export default function OrdersPage() {
                 }`}
                 title={soundEnabled ? 'Sound enabled' : 'Sound disabled'}
               >
-                {soundEnabled ? (
-                  <Volume2 className="h-5 w-5" />
-                ) : (
-                  <VolumeX className="h-5 w-5" />
-                )}
+                {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
               </button>
 
               <Link
@@ -393,7 +389,9 @@ export default function OrdersPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-slate-400">Total</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-slate-100">{stats.total}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-slate-100">
+                    {stats.total}
+                  </p>
                 </div>
                 <Package className="h-8 w-8 text-gray-400" />
               </div>
@@ -418,8 +416,6 @@ export default function OrdersPage() {
                 <ChefHat className="h-8 w-8 text-teal-500" />
               </div>
             </div>
-
-            
 
             <div className="rounded-lg bg-green-50 p-4">
               <div className="flex items-center justify-between">
@@ -463,7 +459,7 @@ export default function OrdersPage() {
                 onClick={() => setStatusFilter('preparing')}
                 className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   statusFilter === 'preparing'
-                    ? 'bg-teal-600 text-white'
+                    ? 'animate-pulse bg-teal-600 text-white shadow-lg shadow-teal-500/50 ring-2 ring-teal-400/30'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                 }`}
               >
@@ -499,7 +495,7 @@ export default function OrdersPage() {
                   const q = params.toString();
                   router.replace(`/dashboard/orders${q ? `?${q}` : ''}`);
                 }}
-                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 md:w-64 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-400"
+                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-400 md:w-64"
               />
             </div>
           </div>
@@ -508,20 +504,51 @@ export default function OrdersPage() {
 
       {/* Orders Content */}
       <div className="container mx-auto px-4 py-8">
-        {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/40 dark:bg-red-900/20">
-            <p className="text-red-600">{error}</p>
+        {error === 'no_restaurant' ? (
+          /* No Restaurant State */
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="mb-6 rounded-full bg-emerald-100 p-6 dark:bg-emerald-900/20">
+              <Package className="h-16 w-16 text-emerald-600" />
+            </div>
+            <h2 className="mb-2 text-2xl font-semibold text-gray-900 dark:text-slate-100">
+              Welcome to QR Menu Manager!
+            </h2>
+            <p className="mb-8 max-w-md text-center text-gray-600 dark:text-slate-400">
+              To start receiving orders, you need to create your first restaurant. Once created, you
+              can build your menu and generate QR codes for customers.
+            </p>
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <Link
+                href="/dashboard/restaurants/new"
+                className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 font-medium text-white transition-colors hover:bg-emerald-700"
+              >
+                <Package className="h-5 w-5" />
+                Create Your First Restaurant
+              </Link>
+              <Link
+                href="/dashboard"
+                className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              >
+                Back to Dashboard
+              </Link>
+            </div>
           </div>
-        )}
+        ) : error ? (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/40 dark:bg-red-900/20">
+            <p className="text-red-600 dark:text-red-400">{error}</p>
+          </div>
+        ) : null}
 
-        {filteredOrders.length === 0 ? (
+        {!error && filteredOrders.length === 0 ? (
           /* Empty State */
           <div className="flex flex-col items-center justify-center py-16">
             <div className="mb-6 rounded-full bg-gray-100 p-6">
               <Package className="h-16 w-16 text-gray-400" />
             </div>
             <h2 className="mb-2 text-2xl font-semibold text-gray-900">
-              {statusFilter === 'all' ? 'No Orders Yet' : `No ${statusConfig[statusFilter as keyof typeof statusConfig]?.label} Orders`}
+              {statusFilter === 'all'
+                ? 'No Orders Yet'
+                : `No ${statusConfig[statusFilter as keyof typeof statusConfig]?.label} Orders`}
             </h2>
             <p className="max-w-md text-center text-gray-600">
               {statusFilter === 'all'
@@ -529,7 +556,7 @@ export default function OrdersPage() {
                 : `There are no orders with status "${statusConfig[statusFilter as keyof typeof statusConfig]?.label}" at the moment.`}
             </p>
           </div>
-        ) : (
+        ) : !error ? (
           /* Orders Grid */
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredOrders.map((order) => {
@@ -539,7 +566,7 @@ export default function OrdersPage() {
               return (
                 <div
                   key={order._id}
-                  className="group cursor-pointer rounded-lg border-2 bg-white p-6 shadow-sm transition-all hover:shadow-lg hover:-translate-y-1 dark:border-slate-800 dark:bg-slate-900"
+                  className="group cursor-pointer rounded-lg border-2 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
                   onClick={() => setSelectedOrder(order)}
                 >
                   {/* Order Header */}
@@ -549,7 +576,9 @@ export default function OrdersPage() {
                         <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100">
                           #{order.orderNumber}
                         </h3>
-                        <div className={`h-2 w-2 rounded-full ${status.dotColor} animate-pulse`}></div>
+                        <div
+                          className={`h-2 w-2 rounded-full ${status.dotColor} animate-pulse`}
+                        ></div>
                       </div>
                       <p className="text-sm text-gray-500 dark:text-slate-400">
                         {formatDistanceToNow(new Date(order.createdAt), { addSuffix: true })}
@@ -559,7 +588,9 @@ export default function OrdersPage() {
                   </div>
 
                   {/* Status Badge */}
-                  <div className={`mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium ${status.color}`}>
+                  <div
+                    className={`mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium ${status.color}`}
+                  >
                     {status.label}
                   </div>
 
@@ -603,7 +634,9 @@ export default function OrdersPage() {
 
                   {/* Total */}
                   <div className="flex items-center justify-between border-t border-gray-200 pt-4 dark:border-slate-800">
-                    <span className="text-sm font-medium text-gray-600 dark:text-slate-400">Total</span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-slate-400">
+                      Total
+                    </span>
                     <span className="text-xl font-bold text-emerald-600">
                       {formatPrice(order.totalCents)}
                     </span>
@@ -629,7 +662,7 @@ export default function OrdersPage() {
                             e.stopPropagation();
                             updateOrderStatus(order._id, 'completed');
                           }}
-                          className="flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
+                          className="flex-1 animate-pulse rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white shadow-lg shadow-green-500/50 ring-2 ring-green-400/30 transition-colors hover:bg-green-700"
                         >
                           Complete Order
                         </button>
@@ -640,7 +673,7 @@ export default function OrdersPage() {
               );
             })}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Order Details Modal */}
@@ -671,13 +704,15 @@ export default function OrdersPage() {
                   <XCircle className="h-6 w-6" />
                 </button>
               </div>
-              
+
               {/* Status Badge */}
               <div className="mt-4">
                 {(() => {
                   const status = statusConfig[selectedOrder.status];
                   return (
-                    <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 ${status.color}`}>
+                    <div
+                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 ${status.color}`}
+                    >
                       <status.icon className="h-5 w-5" />
                       <span className="font-medium">{status.label}</span>
                     </div>
@@ -690,7 +725,9 @@ export default function OrdersPage() {
             <div className="max-h-[60vh] overflow-y-auto p-6">
               {/* Customer Information */}
               <div className="mb-6">
-                <h3 className="mb-3 font-semibold text-gray-900 dark:text-slate-100">Customer Information</h3>
+                <h3 className="mb-3 font-semibold text-gray-900 dark:text-slate-100">
+                  Customer Information
+                </h3>
                 <div className="space-y-2 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-gray-400" />
@@ -698,12 +735,16 @@ export default function OrdersPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600 dark:text-slate-400">{selectedOrder.customerEmail}</span>
+                    <span className="text-gray-600 dark:text-slate-400">
+                      {selectedOrder.customerEmail}
+                    </span>
                   </div>
                   {selectedOrder.tableNumber && (
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-600 dark:text-slate-400">Table {selectedOrder.tableNumber}</span>
+                      <span className="text-gray-600 dark:text-slate-400">
+                        Table {selectedOrder.tableNumber}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -711,10 +752,15 @@ export default function OrdersPage() {
 
               {/* Order Items */}
               <div className="mb-6">
-                <h3 className="mb-3 font-semibold text-gray-900 dark:text-slate-100">Order Items</h3>
+                <h3 className="mb-3 font-semibold text-gray-900 dark:text-slate-100">
+                  Order Items
+                </h3>
                 <div className="space-y-3">
                   {selectedOrder.items.map((item, idx) => (
-                    <div key={idx} className="rounded-lg border border-gray-200 p-4 dark:border-slate-800 dark:bg-slate-900">
+                    <div
+                      key={idx}
+                      className="rounded-lg border border-gray-200 p-4 dark:border-slate-800 dark:bg-slate-900"
+                    >
                       <div className="flex justify-between">
                         <div>
                           <p className="font-medium text-gray-900 dark:text-slate-100">
@@ -723,7 +769,10 @@ export default function OrdersPage() {
                           {item.modifiers?.length > 0 && (
                             <div className="mt-1 space-y-1">
                               {item.modifiers.map((mod, modIdx) => (
-                                <p key={modIdx} className="text-sm text-gray-600 dark:text-slate-400">
+                                <p
+                                  key={modIdx}
+                                  className="text-sm text-gray-600 dark:text-slate-400"
+                                >
                                   + {mod.name}
                                   {mod.priceDelta > 0 && ` (+${formatPrice(mod.priceDelta)})`}
                                 </p>
@@ -748,8 +797,10 @@ export default function OrdersPage() {
               {/* Notes */}
               {selectedOrder.notes && (
                 <div className="mb-6">
-                  <h3 className="mb-3 font-semibold text-gray-900 dark:text-slate-100">Special Instructions</h3>
-                  <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-4 dark:border-yellow-900/40 dark:bg-yellow-900/20">
+                  <h3 className="mb-3 font-semibold text-gray-900 dark:text-slate-100">
+                    Special Instructions
+                  </h3>
+                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/40 dark:bg-yellow-900/20">
                     <p className="text-gray-700 dark:text-yellow-200">{selectedOrder.notes}</p>
                   </div>
                 </div>
@@ -796,9 +847,9 @@ export default function OrdersPage() {
                         updateOrderStatus(selectedOrder._id, 'completed');
                         setSelectedOrder(null);
                       }}
-                      className="flex-1 rounded-lg bg-green-600 px-4 py-3 font-medium text-white transition-colors hover:bg-green-700"
+                      className="flex-1 animate-pulse rounded-lg bg-green-600 px-4 py-3 font-medium text-white shadow-lg shadow-green-500/50 ring-2 ring-green-400/30 transition-colors hover:bg-green-700"
                     >
-                      Complete Order
+                      🔥 Complete Order
                     </button>
                   )}
                 </div>
@@ -808,5 +859,13 @@ export default function OrdersPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+      <OrdersPageContent />
+    </Suspense>
   );
 }

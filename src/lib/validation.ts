@@ -32,24 +32,16 @@ export const createRestaurantSchema = z.object({
         .string()
         .min(3)
         .max(5)
-        .regex(/^[A-Z]{3,5}$/)
         .optional(),
       timezone: z.string().optional(),
       enableNotifications: z.boolean().optional(),
     })
     .optional(),
-  paymentInfo: z.object({
-    upiId: z.string().refine((val) => !val || /^[\w.-]+@[\w.-]+$/.test(val), {
-      message: 'Invalid UPI ID format (e.g., name@paytm)',
-    }).optional(),
-    accountHolderName: z.string().max(100).optional(),
-  }).optional(),
 });
 
 export const updateRestaurantSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   description: z.string().max(500).optional().or(z.literal('')),
-  address: z.string().max(200).optional(),
   contactName: z.string().max(100).optional().or(z.literal('')),
   contactPhone: z.string().max(20).optional().or(z.literal('')),
   phone: z.string().max(20).optional().or(z.literal('')),
@@ -66,12 +58,6 @@ export const updateRestaurantSchema = z.object({
     timezone: z.string().optional(),
     openingHours: z.string().optional().or(z.literal('')),
     enableNotifications: z.boolean().optional(),
-  }).optional(),
-  paymentInfo: z.object({
-    upiId: z.string().refine((val) => !val || /^[\w.-]+@[\w.-]+$/.test(val), {
-      message: 'Invalid UPI ID format (e.g., name@paytm)',
-    }).optional().or(z.literal('')),
-    accountHolderName: z.string().max(100).optional().or(z.literal('')),
   }).optional(),
   lastScanned: z.date().optional(),
 }).passthrough();
@@ -132,7 +118,7 @@ export const createOrderSchema = z.object({
   items: z.array(orderItemSchema).min(1, 'Order must have at least one item'),
   customerName: z.string().min(1, 'Customer name is required').max(100),
   tableNumber: z.number().int().min(1, 'Invalid table number'),
-  customerEmail: z.string().email('Invalid email address'),
+  customerEmail: z.string().email('Invalid email address').optional(),
 });
 
 export const updateOrderStatusSchema = z.object({

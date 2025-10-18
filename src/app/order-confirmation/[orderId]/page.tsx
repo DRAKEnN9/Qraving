@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -54,7 +54,7 @@ const statusConfig = {
     color: 'text-blue-600',
     bgColor: 'bg-blue-100',
   },
-  
+
   completed: {
     label: 'Completed',
     description: 'Your order has been completed. Thank you!',
@@ -71,7 +71,7 @@ const statusConfig = {
   },
 };
 
-export default function OrderConfirmationPage() {
+function OrderConfirmationPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const orderId = params?.orderId as string;
@@ -104,34 +104,7 @@ export default function OrderConfirmationPage() {
       setOrder(data.order);
       setLoading(false);
 
-      // When order loads and this is a UPI checkout, fetch restaurant UPI details and prepare link/QR
-      if (data?.order?.restaurant?.slug && isUPICheckout) {
-        try {
-          const restRes = await fetch(`/api/menu/${data.order.restaurant.slug}`);
-          const restJson = await restRes.json();
-          const upiId: string | undefined = restJson?.restaurant?.paymentInfo?.upiId;
-          const payeeName: string = restJson?.restaurant?.paymentInfo?.accountHolderName || restJson?.restaurant?.name || 'Restaurant';
-          if (upiId) {
-            setHasUPI(true);
-            const link = generateUPILink({
-              upiId,
-              payeeName,
-              amount: formatUPIAmount(data.order.totalCents),
-              transactionNote: `Order #${data.order.orderNumber} at ${restJson?.restaurant?.name || 'Restaurant'}`,
-              transactionRef: String(data.order._id),
-            });
-            setUpiLink(link);
-            try {
-              const dataUrl = await QRCode.toDataURL(link);
-              setUpiQR(dataUrl);
-            } catch {}
-          } else {
-            setHasUPI(false);
-          }
-        } catch (e) {
-          setHasUPI(false);
-        }
-      }
+      // UPI payment removed - all orders use cash payment at counter
     } catch (err) {
       console.error(err);
       setLoading(false);
@@ -269,7 +242,9 @@ export default function OrderConfirmationPage() {
               <div className="flex items-center gap-3">
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                    order.status === 'pending' || order.status === 'preparing' || order.status === 'completed'
+                    order.status === 'pending' ||
+                    order.status === 'preparing' ||
+                    order.status === 'completed'
                       ? 'bg-green-600'
                       : 'bg-gray-300'
                   }`}
@@ -289,8 +264,8 @@ export default function OrderConfirmationPage() {
                     order.status === 'preparing' || order.status === 'completed'
                       ? 'bg-green-600'
                       : order.status === 'pending'
-                      ? 'bg-yellow-400 animate-pulse'
-                      : 'bg-gray-300'
+                        ? 'animate-pulse bg-yellow-400'
+                        : 'bg-gray-300'
                   }`}
                 >
                   <ChefHat className="h-4 w-4 text-white" />
@@ -324,7 +299,10 @@ export default function OrderConfirmationPage() {
           <h3 className="mb-4 text-xl font-bold text-gray-900">Order Details</h3>
           <div className="space-y-4">
             {order.items.map((item, idx) => (
-              <div key={idx} className="flex justify-between border-b border-gray-100 pb-4 last:border-0">
+              <div
+                key={idx}
+                className="flex justify-between border-b border-gray-100 pb-4 last:border-0"
+              >
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">
                     {item.quantity}x {item.name}
@@ -351,7 +329,7 @@ export default function OrderConfirmationPage() {
 
           {/* Notes */}
           {order.notes && (
-            <div className="mt-4 rounded-lg bg-yellow-50 border border-yellow-200 p-4">
+            <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
               <p className="text-sm font-medium text-gray-700">Special Instructions:</p>
               <p className="text-gray-600">{order.notes}</p>
             </div>
@@ -368,6 +346,22 @@ export default function OrderConfirmationPage() {
 
         {/* Actions */}
         <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+          {order.status === 'pending' && (
+            <Link
+              href={`/order-waiting/${order._id}`}
+              className="flex-1 rounded-lg bg-indigo-600 px-6 py-3 text-center font-medium text-white transition-colors hover:bg-indigo-700"
+            >
+              View Live Status
+            </Link>
+          )}
+          {order.status === 'preparing' && (
+            <Link
+              href={`/order-waiting/${order._id}`}
+              className="flex-1 animate-pulse rounded-lg bg-green-600 px-6 py-3 text-center font-medium text-white shadow-lg shadow-green-500/50 ring-2 ring-green-400/50 transition-colors hover:bg-green-700"
+            >
+              Order Being Prepared
+            </Link>
+          )}
           <Link
             href={`/menu/${order.restaurant.slug}`}
             className="flex-1 rounded-lg border-2 border-indigo-600 bg-white px-6 py-3 text-center font-medium text-indigo-600 transition-colors hover:bg-indigo-50"
@@ -382,37 +376,11 @@ export default function OrderConfirmationPage() {
           </button>
         </div>
 
-        {/* UPI Payment Actions (if applicable) */}
-        {isUPICheckout && hasUPI && (
-          <div className="mt-8 rounded-lg border bg-white p-6 shadow-sm">
-            <h3 className="mb-2 text-xl font-bold text-gray-900">Complete Payment</h3>
-            <p className="mb-4 text-sm text-gray-600">Open your UPI app or scan the QR to pay. Once paid, the restaurant will confirm your order.</p>
-            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <a
-                href={upiLink}
-                className="w-full sm:w-auto rounded-lg bg-indigo-600 px-6 py-3 text-center font-medium text-white hover:bg-indigo-700"
-              >
-                Open in UPI App
-              </a>
-              <button
-                onClick={async () => { try { await navigator.clipboard?.writeText(upiLink); toast.success('UPI link copied'); } catch {} }}
-                className="w-full sm:w-auto rounded-lg border border-slate-300 bg-white px-6 py-3 font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Copy UPI Link
-              </button>
-            </div>
-            {upiQR && (
-              <div className="mt-6 flex justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={upiQR} alt="UPI QR" className="h-48 w-48 rounded-lg border" />
-              </div>
-            )}
-          </div>
-        )}
+        {/* Payment completed at counter - no UPI integration */}
 
         {/* Auto-refresh Notice */}
         {order.status !== 'completed' && order.status !== 'cancelled' && (
-          <div className="mt-6 rounded-lg bg-blue-50 border border-blue-200 p-4">
+          <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
             <p className="text-center text-sm text-blue-700">
               🔄 This page updates automatically. You'll see status changes as they happen.
             </p>
@@ -420,5 +388,13 @@ export default function OrderConfirmationPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+      <OrderConfirmationPageContent />
+    </Suspense>
   );
 }

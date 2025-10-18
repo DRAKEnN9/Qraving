@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Store, 
-  ShoppingBag, 
-  TrendingUp, 
+import {
+  Store,
+  ShoppingBag,
+  TrendingUp,
   DollarSign,
   Clock,
   Plus,
@@ -146,7 +146,9 @@ export default function DashboardPage() {
             (o: any) =>
               new Date(o.createdAt) >= lastMonthStart && new Date(o.createdAt) <= lastMonthEnd
           );
-          const openOrders = orders.filter((o: any) => o.status === 'pending' || o.status === 'preparing');
+          const openOrders = orders.filter(
+            (o: any) => o.status === 'pending' || o.status === 'preparing'
+          );
 
           setStats({
             todayOrders: todayOrders.length,
@@ -156,14 +158,20 @@ export default function DashboardPage() {
             totalRestaurants: resData.restaurants.length,
             totalMenuItems,
             previousDayOrders: yesterdayOrders.length,
-            previousMonthRevenue: lastMonthOrders.reduce((sum: number, o: any) => sum + (o.totalCents || 0), 0),
+            previousMonthRevenue: lastMonthOrders.reduce(
+              (sum: number, o: any) => sum + (o.totalCents || 0),
+              0
+            ),
           });
 
           // Set live orders (recent pending/preparing)
           setLiveOrders(
             orders
               .filter((o: any) => o.status === 'pending' || o.status === 'preparing')
-              .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .sort(
+                (a: any, b: any) =>
+                  new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              )
               .slice(0, 5)
           );
 
@@ -218,9 +226,9 @@ export default function DashboardPage() {
 
       // Update local state
       setLiveOrders((prev) =>
-        prev.map((order) =>
-          order._id === orderId ? { ...order, status: newStatus } : order
-        ).filter(o => o.status === 'pending' || o.status === 'preparing')
+        prev
+          .map((order) => (order._id === orderId ? { ...order, status: newStatus } : order))
+          .filter((o) => o.status === 'pending' || o.status === 'preparing')
       );
     } catch (err: any) {
       console.error('Failed to update order status:', err);
@@ -250,14 +258,18 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Orders Today</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">{stats.todayOrders}</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
+                {stats.todayOrders}
+              </p>
               <div className="mt-2 flex items-center gap-1">
                 {todayChange >= 0 ? (
                   <TrendingUp className="h-4 w-4 text-green-600" />
                 ) : (
                   <TrendingDown className="h-4 w-4 text-red-600" />
                 )}
-                <span className={`text-sm font-medium ${todayChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <span
+                  className={`text-sm font-medium ${todayChange >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                >
                   {Math.abs(todayChange).toFixed(1)}%
                 </span>
               </div>
@@ -269,7 +281,11 @@ export default function DashboardPage() {
           {/* Mini sparkline placeholder */}
           <div className="mt-4 flex h-8 items-end justify-between gap-1">
             {[3, 5, 4, 6, 8, 7, 9].map((height, i) => (
-              <div key={i} className="flex-1 rounded-t bg-blue-200" style={{ height: `${height * 10}%` }}></div>
+              <div
+                key={i}
+                className="flex-1 rounded-t bg-blue-200"
+                style={{ height: `${height * 10}%` }}
+              ></div>
             ))}
           </div>
         </div>
@@ -278,15 +294,21 @@ export default function DashboardPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Revenue (MTD)</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">{formatPrice(stats.monthRevenue)}</p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Revenue (MTD)
+              </p>
+              <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
+                {formatPrice(stats.monthRevenue)}
+              </p>
               <div className="mt-2 flex items-center gap-1">
                 {revenueChange >= 0 ? (
                   <TrendingUp className="h-4 w-4 text-green-600" />
                 ) : (
                   <TrendingDown className="h-4 w-4 text-red-600" />
                 )}
-                <span className={`text-sm font-medium ${revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <span
+                  className={`text-sm font-medium ${revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                >
                   {Math.abs(revenueChange).toFixed(1)}%
                 </span>
               </div>
@@ -302,7 +324,9 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Open Orders</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">{stats.openOrders}</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
+                {stats.openOrders}
+              </p>
               <div className="mt-2 flex items-center gap-1">
                 {stats.openOrders > 5 ? (
                   <>
@@ -327,9 +351,11 @@ export default function DashboardPage() {
       {/* Main Workspace - 2 Column Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Live Orders Feed - Left Column */}
-        <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Live Orders</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              Live Orders
+            </h2>
             <Link
               href="/dashboard/orders"
               className="flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700"
@@ -343,7 +369,9 @@ export default function DashboardPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Package className="h-16 w-16 text-slate-300" />
               <p className="mt-4 text-sm font-medium text-slate-600">No active orders</p>
-              <p className="text-sm text-slate-500">Orders will appear here when customers place them</p>
+              <p className="text-sm text-slate-500">
+                Orders will appear here when customers place them
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -355,9 +383,13 @@ export default function DashboardPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-900 dark:text-slate-100">#{order.orderNumber}</span>
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">
+                          #{order.orderNumber}
+                        </span>
                         {order.tableNumber && (
-                          <span className="text-sm text-slate-600 dark:text-slate-400">• Table {order.tableNumber}</span>
+                          <span className="text-sm text-slate-600 dark:text-slate-400">
+                            • Table {order.tableNumber}
+                          </span>
                         )}
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -369,14 +401,18 @@ export default function DashboardPage() {
                           {order.status === 'pending' ? 'New' : 'Preparing'}
                         </span>
                       </div>
-                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{order.customerName}</p>
+                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                        {order.customerName}
+                      </p>
                       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                         {order.items.length} {order.items.length === 1 ? 'item' : 'items'} •{' '}
                         {formatDistanceToNow(new Date(order.createdAt), { addSuffix: true })}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-bold text-emerald-600">{formatPrice(order.totalCents)}</p>
+                      <p className="text-lg font-bold text-emerald-600">
+                        {formatPrice(order.totalCents)}
+                      </p>
                     </div>
                   </div>
 
@@ -399,7 +435,7 @@ export default function DashboardPage() {
                           e.stopPropagation();
                           updateOrderStatus(order._id, 'completed');
                         }}
-                        className="flex-1 rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-green-700"
+                        className="flex-1 animate-pulse rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white shadow-lg shadow-green-500/50 ring-2 ring-green-400/30 transition-colors hover:bg-green-700"
                       >
                         Complete
                       </button>
@@ -424,9 +460,13 @@ export default function DashboardPage() {
         <div className="space-y-6">
           {/* Top Selling Items */}
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Top Selling</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
+              Top Selling
+            </h2>
             {topItems.length === 0 ? (
-              <p className="text-center text-sm text-slate-500 dark:text-slate-400">No orders yet</p>
+              <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+                No orders yet
+              </p>
             ) : (
               <div className="space-y-3">
                 {topItems.map((item, index) => (
@@ -437,15 +477,19 @@ export default function DashboardPage() {
                           index === 0
                             ? 'bg-yellow-100 text-yellow-700'
                             : index === 1
-                            ? 'bg-gray-100 text-gray-700'
-                            : 'bg-teal-100 text-teal-700'
+                              ? 'bg-gray-100 text-gray-700'
+                              : 'bg-teal-100 text-teal-700'
                         }`}
                       >
                         {index + 1}
                       </div>
-                      <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.name}</span>
+                      <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                        {item.name}
+                      </span>
                     </div>
-                    <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{item.count}</span>
+                    <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                      {item.count}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -454,7 +498,9 @@ export default function DashboardPage() {
 
           {/* Quick Actions */}
           <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 dark:border-emerald-900/30 dark:from-emerald-900/20 dark:to-teal-900/20">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Quick Actions</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
+              Quick Actions
+            </h2>
             <div className="space-y-3">
               <Link
                 href="/dashboard/qr-codes"
@@ -463,7 +509,9 @@ export default function DashboardPage() {
                 <div className="rounded-lg bg-emerald-100 p-2">
                   <QrCode className="h-5 w-5 text-emerald-700" />
                 </div>
-                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">Create QR Code</span>
+                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Create QR Code
+                </span>
               </Link>
               <Link
                 href="/dashboard/menu-builder"
@@ -472,7 +520,9 @@ export default function DashboardPage() {
                 <div className="rounded-lg bg-teal-100 p-2">
                   <Plus className="h-5 w-5 text-teal-700" />
                 </div>
-                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">Add Menu Item</span>
+                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Add Menu Item
+                </span>
               </Link>
             </div>
           </div>

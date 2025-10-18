@@ -59,12 +59,9 @@ export async function PATCH(
     const ownerId = await resolveEffectiveOwnerId(user);
     if (!ownerId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // If not account-level owner, block payment-critical fields and currency updates
+    // If not account-level owner, block currency updates
     const account = await resolveAccountRole(user);
     if (!account || account.role !== 'owner') {
-      if (validatedData.paymentInfo) {
-        delete (validatedData as any).paymentInfo;
-      }
       if (validatedData.settings && (validatedData.settings as any).currency !== undefined) {
         delete (validatedData.settings as any).currency;
       }
@@ -76,7 +73,7 @@ export async function PATCH(
       { new: true, runValidators: true }
     );
     
-    console.log('Updated restaurant paymentInfo:', restaurant?.paymentInfo);
+    console.log('Updated restaurant:', restaurant?.name);
     console.log('===== END DEBUG =====');
 
     if (!restaurant) {

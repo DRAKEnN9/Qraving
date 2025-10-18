@@ -72,15 +72,13 @@ export async function POST(request: NextRequest) {
     const restaurantDoc = await Restaurant.findById(restaurantId).lean();
     const orderCurrency = (restaurantDoc as any)?.settings?.currency || 'INR';
 
-    // Create order in database
-    const order = await Order.create({
+    // Create order in database - only include email/phone if provided
+    const orderData: any = {
       restaurantId,
       items,
       totalCents,
       currency: orderCurrency,
       customerName,
-      customerEmail,
-      customerPhone: customerPhone || undefined,
       tableNumber,
       notes: notes || undefined,
       razorpayOrderId: razorpayOrderId || undefined,
@@ -89,7 +87,17 @@ export async function POST(request: NextRequest) {
       paymentMethod: paymentMethod,
       paymentStatus: paymentStatus,
       status: 'pending',
-    });
+    };
+
+    // Only add email/phone if they exist and are not empty
+    if (customerEmail && customerEmail.trim()) {
+      orderData.customerEmail = customerEmail;
+    }
+    if (customerPhone && customerPhone.trim()) {
+      orderData.customerPhone = customerPhone;
+    }
+
+    const order = await Order.create(orderData);
 
     console.log('✅ Order created:', String(order._id));
 

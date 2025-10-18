@@ -25,10 +25,6 @@ interface Restaurant {
     timezone: string;
     enableNotifications: boolean;
   };
-  paymentInfo?: {
-    upiId?: string;
-    accountHolderName?: string;
-  };
 }
 
 export default function RestaurantSettingsPage() {
@@ -52,8 +48,6 @@ export default function RestaurantSettingsPage() {
     currency: 'INR',
     timezone: 'Asia/Kolkata',
     enableNotifications: true,
-    upiId: '',
-    accountHolderName: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -99,8 +93,6 @@ export default function RestaurantSettingsPage() {
           currency: found.settings?.currency || 'INR',
           timezone: found.settings?.timezone || 'Asia/Kolkata',
           enableNotifications: found.settings?.enableNotifications ?? true,
-          upiId: found.paymentInfo?.upiId || '',
-          accountHolderName: found.paymentInfo?.accountHolderName || '',
         });
         setLoading(false);
       })
@@ -154,19 +146,8 @@ export default function RestaurantSettingsPage() {
   const handleSave = async () => {
     setErrors({});
 
-    // Validate UPI ID format if provided
-    if (formData.upiId.trim() && !/^[\w.-]+@[\w.-]+$/.test(formData.upiId.trim())) {
-      setErrors({
-        save: 'Invalid UPI ID format. Example: restaurant@paytm, restaurant@axl, restaurant@ybl',
-      });
-      toast.error('Invalid UPI ID format');
-      return;
-    }
-
     setSaving(true);
     console.log('Saving restaurant settings...');
-    console.log('UPI ID:', formData.upiId);
-    console.log('Account Holder:', formData.accountHolderName);
 
     try {
       const token = localStorage.getItem('token');
@@ -187,10 +168,6 @@ export default function RestaurantSettingsPage() {
           currency: formData.currency,
           timezone: formData.timezone,
           enableNotifications: formData.enableNotifications,
-        },
-        paymentInfo: {
-          upiId: formData.upiId.trim() || undefined,
-          accountHolderName: formData.accountHolderName.trim() || undefined,
         },
       };
 
@@ -537,73 +514,6 @@ export default function RestaurantSettingsPage() {
             </div>
           </div>
 
-          {/* Payment Information */}
-          <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-slate-100">Payment Information</h2>
-            <p className="mb-4 text-sm text-gray-600 dark:text-slate-400">
-              Configure how you want to receive payments from customers
-            </p>
-
-            <div className="space-y-4">
-              {/* UPI ID */}
-              <div>
-                <label htmlFor="upiId" className="block text-sm font-medium text-gray-700">
-                  UPI ID <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="upiId"
-                  type="text"
-                  value={formData.upiId}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, upiId: e.target.value }))}
-                  className={`mt-1 w-full rounded-lg border px-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:text-slate-100 ${
-                    errors.upiId ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-slate-700'
-                  }`}
-                  placeholder="restaurant@paytm"
-                />
-                {errors.upiId && <p className="mt-1 text-sm text-red-600">{errors.upiId}</p>}
-                <p className="mt-1 text-xs text-gray-500">
-                  Example: yourname@paytm, business@ybl, merchant@oksbi
-                </p>
-              </div>
-
-              {/* Account Holder Name */}
-              <div>
-                <label
-                  htmlFor="accountHolderName"
-                  className="block text-sm font-medium text-gray-700 dark:text-slate-300"
-                >
-                  Account Holder Name
-                </label>
-                <input
-                  id="accountHolderName"
-                  type="text"
-                  value={formData.accountHolderName}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, accountHolderName: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                  placeholder="Business Name or Owner Name"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Name registered with your UPI account (optional but recommended)
-                </p>
-              </div>
-
-              {/* Info Box */}
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/30 dark:bg-blue-900/20">
-                <div className="flex gap-3">
-                  <div className="text-2xl">💳</div>
-                  <div>
-                    <p className="text-sm font-medium text-blue-900 dark:text-blue-200">Direct UPI Payments</p>
-                    <p className="mt-1 text-xs text-blue-700 dark:text-blue-200/80">
-                      Customers will pay directly to your UPI ID. Works with all UPI apps (GPay,
-                      PhonePe, Paytm, BHIM). Money reaches your account instantly!
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Actions */}
           <div className="flex gap-4">

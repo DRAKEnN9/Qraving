@@ -159,6 +159,20 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     const handleNewOrder = (data: any) => {
       console.log('New order received:', data);
 
+      // Only show notifications if user is a restaurant owner/admin
+      if (!user || !user.id) {
+        console.log('Ignoring new order notification - no authenticated user');
+        return;
+      }
+
+      // Only restaurant staff should get new order notifications
+      // Customers should not receive these notifications
+      const isRestaurantStaff = user.role === 'owner' || user.accountRole === 'owner' || user.accountRole === 'admin';
+      if (!isRestaurantStaff) {
+        console.log('Ignoring new order notification - user is not restaurant staff');
+        return;
+      }
+
       // Play sound
       playNotificationSound();
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -39,7 +39,7 @@ declare global {
   }
 }
 
-export default function SubscribePage() {
+function SubscribePageContent() {
   const router = useRouter();
   const params = useSearchParams();
   const defaultPlan = (params.get('plan') as PlanId) || 'basic';
@@ -199,5 +199,13 @@ export default function SubscribePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SubscribePage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+      <SubscribePageContent />
+    </Suspense>
   );
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail, Shield, Lock, Eye, EyeOff, CheckCircle, AlertTriangle } from 'lucide-react';
 
-export default function RegisterFromInvitePage() {
+function RegisterFromInvitePageContent() {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -207,5 +207,13 @@ export default function RegisterFromInvitePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterFromInvitePage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+      <RegisterFromInvitePageContent />
+    </Suspense>
   );
 }

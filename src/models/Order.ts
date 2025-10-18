@@ -15,7 +15,7 @@ export interface IOrder extends Document {
   totalCents: number;
   currency: string;
   customerName: string;
-  customerEmail: string;
+  customerEmail?: string;
   customerPhone?: string;
   tableNumber: number;
   notes?: string;
@@ -99,8 +99,14 @@ const OrderSchema = new Schema<IOrder>(
     },
     customerEmail: {
       type: String,
-      required: [true, 'Please provide customer email'],
-      match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email'],
+      required: false,
+      validate: {
+        validator: function(v: string) {
+          // Only validate if email is provided
+          return !v || /^\S+@\S+\.\S+$/.test(v);
+        },
+        message: 'Please provide a valid email'
+      },
     },
     customerPhone: {
       type: String,

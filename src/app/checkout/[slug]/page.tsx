@@ -16,10 +16,6 @@ interface Restaurant {
   logo?: string;
   tableNumber?: number;
   currency?: string;
-  paymentInfo?: {
-    upiId?: string;
-    accountHolderName?: string;
-  };
 }
 
 export default function CheckoutPage() {
@@ -75,12 +71,9 @@ export default function CheckoutPage() {
 
       const data = await response.json();
       console.log('Restaurant data:', data.restaurant);
-      console.log('Payment Info:', data.restaurant.paymentInfo);
       setRestaurant(data.restaurant);
-      // If UPI not configured, default to Pay Later
-      if (!data?.restaurant?.paymentInfo?.upiId) {
-        setPaymentOption('cash');
-      }
+      // Default to Pay Later (cash)
+      setPaymentOption('cash');
     } catch (err) {
       console.error('Fetch restaurant error:', err);
       toast.error('Failed to load restaurant details');
@@ -98,8 +91,8 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
-    if (!customerName || !customerEmail) {
-      toast.error('Please fill in all required fields');
+    if (!customerName) {
+      toast.error('Please enter your name');
       return;
     }
 
@@ -126,8 +119,6 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           restaurantId: restaurant._id,
           customerName,
-          customerEmail,
-          customerPhone,
           tableNumber,
           notes,
           paymentMethod: paymentOption,
@@ -151,55 +142,20 @@ export default function CheckoutPage() {
       console.log('✅ Order created successfully!');
       console.log('Order ID:', orderData.orderId);
       console.log('Order Number:', orderData.orderNumber);
-      console.log('Full response:', orderData);
 
-      // If UPI selected and UPI ID available, prepare deep link modal
-      if (paymentOption === 'upi' && restaurant.paymentInfo?.upiId) {
-        try {
-          const amountRupees = formatUPIAmount(getTotalPrice());
-          const link = generateUPILink({
-            upiId: restaurant.paymentInfo.upiId,
-            payeeName: restaurant.paymentInfo.accountHolderName || restaurant.name,
-            amount: amountRupees,
-            transactionNote: `Order #${orderData.orderNumber} at ${restaurant.name}`,
-            transactionRef: String(orderData.orderId),
-          });
-          setUpiLink(link);
-          // Generate QR for desktop fallback
-          try {
-            const dataUrl = await QRCode.toDataURL(link);
-            setUpiQR(dataUrl);
-          } catch {}
-          setShowUpiModal(true);
-          // Auto-open UPI app on mobile
-          try {
-            if (isUPISupported()) {
-              // Opening via top-level navigation is most reliable
-              window.location.href = link;
-            }
-          } catch {}
-        } catch (err: any) {
-          console.error('UPI link error:', err);
-          toast.error('Failed to prepare UPI payment link');
-        } finally {
-          // We still show confirmation page after exposing UPI options
-          toast.success('Order placed! Complete payment to confirm.');
-          clearCart();
-          router.push(`/order-confirmation/${orderData.orderId}?success=true&payment=upi`);
-          setLoading(false);
-        }
-        return;
-      }
-
-      // Cash / Pay later path
-      toast.success('Order placed!');
+      // Clear cart and redirect to order waiting screen  
       clearCart();
-      router.push(`/order-confirmation/${orderData.orderId}?success=true&payment=cash`);
-      setLoading(false);
-
+      
+      const redirectUrl = `/order-waiting/${orderData.orderId}?success=true&payment=cash`;
+      console.log('🚀 About to redirect to:', redirectUrl);
+      console.log('Current location:', window.location.href);
+      
+      // Try window.location as a more reliable redirect
+      window.location.href = redirectUrl;
     } catch (err: any) {
       console.error('Order error:', err);
       toast.error(err.message || 'Failed to place order');
+    } finally {
       setLoading(false);
     }
   };
@@ -263,31 +219,6 @@ export default function CheckoutPage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
-                      placeholder="john@example.com"
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      placeholder="+1 (555) 123-4567"
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
                       Table Number <span className="text-red-500">*</span>
                       {restaurant.tableNumber && (
@@ -328,27 +259,10 @@ export default function CheckoutPage() {
                   rows={4}
                 />
               </div>
-
               {/* Payment */}
               <div className="rounded-lg border bg-white p-6 shadow-sm">
                 <h2 className="mb-4 text-xl font-bold text-gray-900">Payment</h2>
                 <div className="space-y-3">
-                  <label className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 ${paymentOption === 'upi' ? 'border-indigo-600 bg-indigo-50/40' : 'border-slate-200 hover:bg-slate-50'}`}>
-                    <input
-                      type="radio"
-                      name="paymentOption"
-                      className="mt-1"
-                      checked={paymentOption === 'upi'}
-                      onChange={() => setPaymentOption('upi')}
-                      disabled={!restaurant.paymentInfo?.upiId}
-                    />
-                    <div>
-                      <p className="font-medium text-gray-900">UPI (Pay Now)</p>
-                      <p className="text-sm text-gray-600">
-                        {restaurant.paymentInfo?.upiId ? `Pay securely via your UPI app (GPay, PhonePe, Paytm, BHIM)` : 'UPI not available for this restaurant'}
-                      </p>
-                    </div>
-                  </label>
                   <label className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 ${paymentOption === 'cash' ? 'border-indigo-600 bg-indigo-50/40' : 'border-slate-200 hover:bg-slate-50'}`}>
                     <input
                       type="radio"
@@ -414,7 +328,7 @@ export default function CheckoutPage() {
               {/* Place Order Button */}
               <button
                 onClick={handlePlaceOrder}
-                disabled={loading || !customerName || !customerEmail || !tableNumber}
+                disabled={loading || !customerName || !tableNumber}
                 className="mt-6 w-full rounded-lg bg-indigo-600 px-6 py-3 font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-400"
               >
                 {loading ? (
@@ -443,7 +357,7 @@ export default function CheckoutPage() {
         </div>
         <button
           onClick={handlePlaceOrder}
-          disabled={loading || !customerName || !customerEmail || !tableNumber}
+          disabled={loading || !customerName || !tableNumber}
           className="rounded-lg bg-indigo-600 px-5 py-2.5 font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-400"
         >
           {loading ? 'Processing...' : (paymentOption === 'upi' ? 'Pay & Place Order' : 'Place Order (Pay Later)')}

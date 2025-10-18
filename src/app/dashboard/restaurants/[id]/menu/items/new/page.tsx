@@ -220,22 +220,22 @@ export default function NewMenuItemPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       {/* Header */}
-      <div className="border-b bg-white">
+      <div className="border-b bg-white dark:bg-slate-900 dark:border-slate-800">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-4">
             <Link
               href={`/dashboard/restaurants/${restaurantId}/menu`}
-              className="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
+              className="flex items-center gap-2 text-gray-600 dark:text-slate-400 transition-colors hover:text-gray-900 dark:hover:text-slate-100"
             >
               <ArrowLeft className="h-5 w-5" />
               Back to Menu
             </Link>
-            <div className="h-6 w-px bg-gray-300"></div>
+            <div className="h-6 w-px bg-gray-300 dark:bg-slate-700"></div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Add Menu Item</h1>
-              <p className="text-gray-600">Create a new dish for your menu</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Add Menu Item</h1>
+              <p className="text-gray-600 dark:text-slate-400">Create a new dish for your menu</p>
             </div>
           </div>
         </div>
@@ -249,13 +249,13 @@ export default function NewMenuItemPage() {
               {/* Left Column - Basic Info */}
               <div className="space-y-6">
                 {/* Basic Information */}
-                <div className="rounded-lg bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-lg font-semibold">Basic Information</h2>
+                <div className="rounded-lg bg-white dark:bg-slate-900 dark:border dark:border-slate-800 p-6 shadow-sm">
+                  <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-slate-100">Basic Information</h2>
                   
                   <div className="space-y-4">
                     {/* Item Name */}
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
                         Item Name *
                       </label>
                       <input
@@ -263,8 +263,8 @@ export default function NewMenuItemPage() {
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                        className={`mt-1 w-full rounded-lg border px-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                          errors.name ? 'border-red-300' : 'border-gray-300'
+                        className={`mt-1 w-full rounded-lg border px-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 ${
+                          errors.name ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-slate-600'
                         }`}
                         placeholder="e.g. Grilled Salmon with Herbs"
                       />
@@ -275,7 +275,7 @@ export default function NewMenuItemPage() {
 
                     {/* Description */}
                     <div>
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
                         Description
                       </label>
                       <textarea
@@ -284,8 +284,8 @@ export default function NewMenuItemPage() {
                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                         rows={4}
                         maxLength={500}
-                        className={`mt-1 w-full rounded-lg border px-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                          errors.description ? 'border-red-300' : 'border-gray-300'
+                        className={`mt-1 w-full rounded-lg border px-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 ${
+                          errors.description ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-slate-600'
                         }`}
                         placeholder="Describe your dish, ingredients, cooking method..."
                       />
@@ -295,7 +295,7 @@ export default function NewMenuItemPage() {
                         ) : (
                           <div></div>
                         )}
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-slate-400">
                           {formData.description.length}/500 characters
                         </p>
                       </div>
@@ -304,11 +304,11 @@ export default function NewMenuItemPage() {
                     {/* Price and Category */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
                           Price *
                         </label>
                         <div className="relative mt-1">
-                          <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                          <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
                           <input
                             id="price"
                             type="number"
@@ -317,8 +317,8 @@ export default function NewMenuItemPage() {
                             max="999.99"
                             value={formData.priceCents}
                             onChange={(e) => setFormData(prev => ({ ...prev, priceCents: e.target.value }))}
-                            className={`w-full rounded-lg border pl-10 pr-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                              errors.price ? 'border-red-300' : 'border-gray-300'
+                            className={`w-full rounded-lg border pl-10 pr-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 ${
+                              errors.price ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-slate-600'
                             }`}
                             placeholder="12.99"
                           />
@@ -329,15 +329,15 @@ export default function NewMenuItemPage() {
                       </div>
 
                       <div>
-                        <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
                           Category *
                         </label>
                         <select
                           id="category"
                           value={formData.categoryId}
                           onChange={(e) => setFormData(prev => ({ ...prev, categoryId: e.target.value }))}
-                          className={`mt-1 w-full rounded-lg border px-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                            errors.category ? 'border-red-300' : 'border-gray-300'
+                          className={`mt-1 w-full rounded-lg border px-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 ${
+                            errors.category ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-slate-600'
                           }`}
                         >
                           <option value="">Select category</option>
@@ -363,7 +363,7 @@ export default function NewMenuItemPage() {
                           onChange={(e) => setFormData(prev => ({ ...prev, orderable: e.target.checked }))}
                           className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         />
-                        <label htmlFor="orderable" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <label htmlFor="orderable" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300">
                           {formData.orderable ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                           Available for ordering
                         </label>
@@ -377,7 +377,7 @@ export default function NewMenuItemPage() {
                           onChange={(e) => setFormData(prev => ({ ...prev, soldOut: e.target.checked }))}
                           className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
                         />
-                        <label htmlFor="soldOut" className="text-sm font-medium text-gray-700">
+                        <label htmlFor="soldOut" className="text-sm font-medium text-gray-700 dark:text-slate-300">
                           Currently sold out
                         </label>
                       </div>
@@ -386,8 +386,8 @@ export default function NewMenuItemPage() {
                 </div>
 
                 {/* Modifiers */}
-                <div className="rounded-lg bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-lg font-semibold">Add-ons & Modifiers</h2>
+                <div className="rounded-lg bg-white dark:bg-slate-900 dark:border dark:border-slate-800 p-6 shadow-sm">
+                  <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-slate-100">Add-ons & Modifiers</h2>
                   
                   {/* Add New Modifier */}
                   <div className="mb-4 space-y-3">
@@ -397,7 +397,7 @@ export default function NewMenuItemPage() {
                         value={newModifier.name}
                         onChange={(e) => setNewModifier(prev => ({ ...prev, name: e.target.value }))}
                         placeholder="e.g. Extra Cheese"
-                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       <div className="flex gap-2">
                         <div className="relative flex-1">
@@ -408,7 +408,7 @@ export default function NewMenuItemPage() {
                             value={newModifier.priceDelta}
                             onChange={(e) => setNewModifier(prev => ({ ...prev, priceDelta: e.target.value }))}
                             placeholder="2.00"
-                            className="w-full rounded-lg border border-gray-300 pl-6 pr-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 pl-6 pr-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
                         </div>
                         <button
@@ -426,10 +426,10 @@ export default function NewMenuItemPage() {
                   {formData.modifiers.length > 0 && (
                     <div className="space-y-2">
                       {formData.modifiers.map((modifier, index) => (
-                        <div key={index} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
-                          <span className="text-sm font-medium">{modifier.name}</span>
+                        <div key={index} className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-slate-800 px-3 py-2">
+                          <span className="text-sm font-medium text-gray-900 dark:text-slate-100">{modifier.name}</span>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600">
+                            <span className="text-sm text-gray-600 dark:text-slate-400">
                               {modifier.priceDelta > 0 ? `+${formatPrice(modifier.priceDelta)}` : 'Free'}
                             </span>
                             <button
@@ -450,8 +450,8 @@ export default function NewMenuItemPage() {
               {/* Right Column - Images & Preview */}
               <div className="space-y-6">
                 {/* Images */}
-                <div className="rounded-lg bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-lg font-semibold">Images</h2>
+                <div className="rounded-lg bg-white dark:bg-slate-900 dark:border dark:border-slate-800 p-6 shadow-sm">
+                  <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-slate-100">Images</h2>
                   
                   {/* Upload Area */}
                   <div className="mb-4">
@@ -463,12 +463,12 @@ export default function NewMenuItemPage() {
                         className="hidden"
                         disabled={imageUploading}
                       />
-                      <div className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 py-8 transition-colors hover:border-indigo-300">
-                        <Upload className="mb-2 h-8 w-8 text-gray-400" />
-                        <p className="text-sm font-medium text-gray-600">
+                      <div className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 dark:border-slate-600 py-8 transition-colors hover:border-indigo-300 dark:hover:border-indigo-500">
+                        <Upload className="mb-2 h-8 w-8 text-gray-400 dark:text-slate-500" />
+                        <p className="text-sm font-medium text-gray-600 dark:text-slate-300">
                           {imageUploading ? 'Uploading...' : 'Click to upload image'}
                         </p>
-                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">PNG, JPG, GIF up to 5MB</p>
                       </div>
                     </label>
                     {errors.image && (
@@ -500,10 +500,10 @@ export default function NewMenuItemPage() {
                 </div>
 
                 {/* Preview */}
-                <div className="rounded-lg bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-lg font-semibold">Preview</h2>
+                <div className="rounded-lg bg-white dark:bg-slate-900 dark:border dark:border-slate-800 p-6 shadow-sm">
+                  <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-slate-100">Preview</h2>
                   
-                  <div className="rounded-lg border border-gray-200 p-4">
+                  <div className="rounded-lg border border-gray-200 dark:border-slate-700 p-4">
                     <div className="flex gap-4">
                       {formData.images[0] ? (
                         <img
@@ -512,17 +512,17 @@ export default function NewMenuItemPage() {
                           className="h-20 w-20 rounded-lg object-cover"
                         />
                       ) : (
-                        <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-gray-100">
-                          <ImageIcon className="h-8 w-8 text-gray-400" />
+                        <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-gray-100 dark:bg-slate-800">
+                          <ImageIcon className="h-8 w-8 text-gray-400 dark:text-slate-500" />
                         </div>
                       )}
                       
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">
+                        <h4 className="font-semibold text-gray-900 dark:text-slate-100">
                           {formData.name || 'Item Name'}
                         </h4>
                         {formData.description && (
-                          <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                          <p className="mt-1 text-sm text-gray-600 dark:text-slate-400 line-clamp-2">
                             {formData.description}
                           </p>
                         )}
@@ -531,7 +531,7 @@ export default function NewMenuItemPage() {
                             {formData.priceCents ? `$${formData.priceCents}` : '$0.00'}
                           </span>
                           {formData.modifiers.length > 0 && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 dark:text-slate-400">
                               +{formData.modifiers.length} options
                             </span>
                           )}
@@ -559,15 +559,15 @@ export default function NewMenuItemPage() {
 
             {/* Submit */}
             {errors.submit && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-                <p className="text-red-600">{errors.submit}</p>
+              <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+                <p className="text-red-600 dark:text-red-400">{errors.submit}</p>
               </div>
             )}
 
             <div className="flex gap-4">
               <Link
                 href={`/dashboard/restaurants/${restaurantId}/menu`}
-                className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-center font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                className="flex-1 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-center font-medium text-gray-700 dark:text-slate-300 transition-colors hover:bg-gray-50 dark:hover:bg-slate-700"
               >
                 Cancel
               </Link>

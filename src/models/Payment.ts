@@ -74,7 +74,7 @@ const PaymentSchema = new Schema<IPayment>(
 
 // Indexes for faster queries
 PaymentSchema.index({ ownerId: 1, createdAt: -1 });
-PaymentSchema.index({ razorpayPaymentId: 1 });
+// razorpayPaymentId index is created automatically by unique: true
 PaymentSchema.index({ status: 1 });
 
 const Payment: Model<IPayment> =

@@ -30,7 +30,6 @@ const UserSchema = new Schema<IUser>(
     },
     googleId: {
       type: String,
-      sparse: true,
     },
     role: {
       type: String,

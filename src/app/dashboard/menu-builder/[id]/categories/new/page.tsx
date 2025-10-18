@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
-export default function NewCategoryPage() {
+function NewCategoryPageContent() {
   const router = useRouter();
   const params = useParams();
   const search = useSearchParams();
@@ -85,5 +85,13 @@ export default function NewCategoryPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewCategoryPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+      <NewCategoryPageContent />
+    </Suspense>
   );
 }

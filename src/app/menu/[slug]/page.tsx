@@ -1,18 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import {
-  Plus,
-  Minus,
-  ShoppingCart,
-  Search,
-  X,
-  Clock,
-  MapPin,
-  AlertCircle,
-} from 'lucide-react';
+import { Plus, Minus, ShoppingCart, Search, X, Clock, MapPin, AlertCircle } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import toast from 'react-hot-toast';
 import { useSocket } from '@/contexts/SocketContext';
@@ -51,13 +42,21 @@ interface Restaurant {
   hours?: string;
 }
 
-export default function CustomerMenuPage() {
+function CustomerMenuPageContent() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const slug = params?.slug as string;
-  const { addItem, updateQuantity, getTotalItems, getTotalPrice, items, setRestaurantId, clearCart } = useCart();
-  const { socket, isConnected, joinRestaurant } = useSocket();
+  const {
+    addItem,
+    updateQuantity,
+    getTotalItems,
+    getTotalPrice,
+    items,
+    setRestaurantId,
+    clearCart,
+  } = useCart();
+  const { socket, isConnected } = useSocket();
 
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -75,23 +74,23 @@ export default function CustomerMenuPage() {
 
   useEffect(() => {
     fetchMenu();
-    
+
     // Check for order success from URL params
     const orderId = searchParams.get('orderId');
     const orderNum = searchParams.get('orderNumber');
-    
+
     if (orderId && orderNum) {
       setShowOrderSuccess(true);
       setOrderNumber(orderNum);
-      
+
       // Clear cart after successful order
       clearCart();
-      
+
       // Show success toast
       toast.success(`Order #${orderNum} placed! Check your email for confirmation.`, {
         duration: 5000,
       });
-      
+
       // Clean URL after showing message
       setTimeout(() => {
         router.replace(`/menu/${slug}`);
@@ -102,7 +101,7 @@ export default function CustomerMenuPage() {
   const fetchMenu = async () => {
     try {
       const response = await fetch(`/api/menu/${slug}`);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch menu');
@@ -123,13 +122,13 @@ export default function CustomerMenuPage() {
   // Real-time updates for menu items (e.g., soldOut toggles)
   useEffect(() => {
     if (!restaurant || !socket || !isConnected) return;
-    try {
-      joinRestaurant(restaurant._id);
-    } catch {}
-
+    
+    // Customers should NOT join restaurant room - that's only for restaurant staff
+    // They will join their specific order room when they place an order
+    
     const handleMenuItemUpdated = (data: any) => {
       setCategories((prev) =>
-        prev.map((cat) => (
+        prev.map((cat) =>
           !cat.items
             ? cat
             : {
@@ -149,7 +148,7 @@ export default function CustomerMenuPage() {
                     : it
                 ),
               }
-        ))
+        )
       );
     };
 
@@ -222,19 +221,33 @@ export default function CustomerMenuPage() {
         <div className="mx-4 max-w-md rounded-lg bg-white p-8 text-center shadow-lg">
           <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-500" />
           <h2 className="mb-2 text-2xl font-bold text-gray-900">Restaurant Not Found</h2>
-          <p className="mb-4 text-gray-600">{error || 'The menu you\'re looking for doesn\'t exist.'}</p>
-          
+          <p className="mb-4 text-gray-600">
+            {error || "The menu you're looking for doesn't exist."}
+          </p>
+
           <div className="mt-6 rounded-lg bg-blue-50 p-4 text-left">
             <p className="mb-2 text-sm font-semibold text-blue-900">💡 Common Issues:</p>
             <ul className="space-y-1 text-sm text-blue-800">
-              <li>• Make sure you're using the restaurant <strong>slug</strong>, not the ID</li>
-              <li>• URL should be: <code className="rounded bg-blue-100 px-1">/menu/restaurant-slug</code></li>
-              <li>• Check: <a href="/api/debug/restaurants" className="font-semibold underline">/api/debug/restaurants</a></li>
+              <li>
+                • Make sure you're using the restaurant <strong>slug</strong>, not the ID
+              </li>
+              <li>
+                • URL should be:{' '}
+                <code className="rounded bg-blue-100 px-1">/menu/restaurant-slug</code>
+              </li>
+              <li>
+                • Check:{' '}
+                <a href="/api/debug/restaurants" className="font-semibold underline">
+                  /api/debug/restaurants
+                </a>
+              </li>
             </ul>
           </div>
-          
+
           <div className="mt-4">
-            <p className="text-sm text-gray-500">Current URL: <code className="rounded bg-gray-100 px-2 py-1">/menu/{slug}</code></p>
+            <p className="text-sm text-gray-500">
+              Current URL: <code className="rounded bg-gray-100 px-2 py-1">/menu/{slug}</code>
+            </p>
           </div>
         </div>
       </div>
@@ -346,9 +359,7 @@ export default function CustomerMenuPage() {
           <div className="space-y-8">
             {filteredCategories.map((category) => (
               <div key={category._id}>
-                <h2 className="mb-4 text-2xl font-bold text-gray-900">
-                  {category.name}
-                </h2>
+                <h2 className="mb-4 text-2xl font-bold text-gray-900">{category.name}</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {category.items?.map((item) => (
                     <div
@@ -378,8 +389,10 @@ export default function CustomerMenuPage() {
                       <div className="flex flex-1 flex-col justify-between">
                         <div>
                           <div className="flex items-start justify-between gap-2">
-                            <h3 className="font-semibold text-gray-900 line-clamp-1">{item.name}</h3>
-                            <span className="font-bold text-indigo-600 whitespace-nowrap text-sm">
+                            <h3 className="line-clamp-1 font-semibold text-gray-900">
+                              {item.name}
+                            </h3>
+                            <span className="whitespace-nowrap text-sm font-bold text-indigo-600">
                               {formatPrice(item.priceCents)}
                             </span>
                           </div>
@@ -547,10 +560,15 @@ export default function CustomerMenuPage() {
                 onClick={() => handleAddToCart(selectedItem)}
                 className="w-full rounded-lg bg-indigo-600 px-6 py-3 font-medium text-white transition-colors hover:bg-indigo-700"
               >
-                Add to Cart - {formatPrice((selectedItem.priceCents + selectedModifiers.reduce((sum, modName) => {
-                  const mod = selectedItem.modifiers.find(m => m.name === modName);
-                  return sum + (mod?.priceDelta || 0);
-                }, 0)) * quantity)}
+                Add to Cart -{' '}
+                {formatPrice(
+                  (selectedItem.priceCents +
+                    selectedModifiers.reduce((sum, modName) => {
+                      const mod = selectedItem.modifiers.find((m) => m.name === modName);
+                      return sum + (mod?.priceDelta || 0);
+                    }, 0)) *
+                    quantity
+                )}
               </button>
             </div>
           </div>
@@ -560,10 +578,7 @@ export default function CustomerMenuPage() {
       {/* Cart Drawer */}
       {showCart && (
         <div className="fixed inset-0 z-50 flex">
-          <div
-            className="flex-1 bg-black bg-opacity-50"
-            onClick={() => setShowCart(false)}
-          ></div>
+          <div className="flex-1 bg-black bg-opacity-50" onClick={() => setShowCart(false)}></div>
           <div className="w-full max-w-md overflow-hidden bg-white shadow-xl">
             {/* Cart Header */}
             <div className="border-b p-6">
@@ -602,7 +617,7 @@ export default function CustomerMenuPage() {
                             {formatPrice(item.priceCents)}
                             {item.modifiers.length > 0 && (
                               <span className="ml-1">
-                                + {item.modifiers.map(m => m.name).join(', ')}
+                                + {item.modifiers.map((m) => m.name).join(', ')}
                               </span>
                             )}
                           </p>
@@ -630,7 +645,11 @@ export default function CustomerMenuPage() {
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-gray-900">
-                            {formatPrice((item.priceCents + item.modifiers.reduce((sum, m) => sum + m.priceDelta, 0)) * item.quantity)}
+                            {formatPrice(
+                              (item.priceCents +
+                                item.modifiers.reduce((sum, m) => sum + m.priceDelta, 0)) *
+                                item.quantity
+                            )}
                           </p>
                         </div>
                       </div>
@@ -662,5 +681,13 @@ export default function CustomerMenuPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CustomerMenuPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+      <CustomerMenuPageContent />
+    </Suspense>
   );
 }

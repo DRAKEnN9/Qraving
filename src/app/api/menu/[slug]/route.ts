@@ -58,7 +58,6 @@ export async function GET(
         address: restaurant.address,
         tableNumber: restaurant.tableNumber,
         currency: (restaurant as any).settings?.currency || 'INR',
-        paymentInfo: restaurant.paymentInfo || undefined,
       },
       categories: categoriesWithItems,
     });

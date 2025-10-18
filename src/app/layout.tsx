@@ -10,14 +10,17 @@ import { NotificationProvider } from '@/contexts/NotificationContext';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_URL || 'http://localhost:3000'),
   title: 'QR Menu Manager - Contactless Ordering & Digital Menus for Restaurants',
   description:
     'Turn any table into a checkout with QR menus, instant ordering & analytics. Accept UPI payments, manage orders in real-time, and grow revenue. Start your 14-day free trial.',
-  keywords: 'QR menu, digital menu, restaurant ordering, contactless ordering, UPI payments, QR code menu, online ordering, restaurant management, food ordering system',
+  keywords:
+    'QR menu, digital menu, restaurant ordering, contactless ordering, UPI payments, QR code menu, online ordering, restaurant management, food ordering system',
   authors: [{ name: 'QR Menu Manager' }],
   openGraph: {
     title: 'QR Menu Manager - Contactless Ordering Made Simple',
-    description: 'QR menus, ordering & analytics. Fast, contactless, and easy-to-manage. Accept UPI payments and grow your restaurant revenue.',
+    description:
+      'QR menus, ordering & analytics. Fast, contactless, and easy-to-manage. Accept UPI payments and grow your restaurant revenue.',
     url: 'https://qrmenumanager.com',
     siteName: 'QR Menu Manager',
     images: [
@@ -64,14 +67,12 @@ export default function RootLayout({
         <ThemeProvider>
           <SocketProvider>
             <NotificationProvider>
-              <CartProvider>
-                {children}
-              </CartProvider>
+              <CartProvider>{children}</CartProvider>
             </NotificationProvider>
           </SocketProvider>
         </ThemeProvider>
         <Toaster
-          position="top-right"
+          position="bottom-center"
           toastOptions={{
             duration: 4000,
             style: {

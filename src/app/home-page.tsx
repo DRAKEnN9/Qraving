@@ -80,7 +80,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t bg-white py-12">
         <div className="container mx-auto px-4 text-center text-gray-600">
-          <p>&copy; 2024 QR Menu Manager. Built with ❤️ for modern restaurants</p>
+          <p>&copy; 2025 QR Menu Manager. Built with ❤️ for modern restaurants</p>
         </div>
       </footer>
     </div>

@@ -8,6 +8,8 @@ interface SocketContextType {
   isConnected: boolean;
   joinRestaurant: (restaurantId: string) => void;
   leaveRestaurant: (restaurantId: string) => void;
+  joinOrder: (orderId: string) => void;
+  leaveOrder: (orderId: string) => void;
 }
 
 const SocketContext = createContext<SocketContextType>({
@@ -15,6 +17,8 @@ const SocketContext = createContext<SocketContextType>({
   isConnected: false,
   joinRestaurant: () => {},
   leaveRestaurant: () => {},
+  joinOrder: () => {},
+  leaveOrder: () => {},
 });
 
 export const useSocket = () => useContext(SocketContext);
@@ -76,8 +80,22 @@ export function SocketProvider({ children }: SocketProviderProps) {
     }
   };
 
+  const joinOrder = (orderId: string) => {
+    if (socket && isConnected) {
+      socket.emit('join-order', orderId);
+      console.log('Joining order room:', orderId);
+    }
+  };
+
+  const leaveOrder = (orderId: string) => {
+    if (socket && isConnected) {
+      socket.emit('leave-order', orderId);
+      console.log('Leaving order room:', orderId);
+    }
+  };
+
   return (
-    <SocketContext.Provider value={{ socket, isConnected, joinRestaurant, leaveRestaurant }}>
+    <SocketContext.Provider value={{ socket, isConnected, joinRestaurant, leaveRestaurant, joinOrder, leaveOrder }}>
       {children}
     </SocketContext.Provider>
   );

@@ -24,10 +24,6 @@ export interface IRestaurant extends Document {
     enableNotifications: boolean;
   };
   qrCodeUrl?: string;
-  paymentInfo?: {
-    upiId?: string;
-    accountHolderName?: string;
-  };
   lastScanned?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -128,14 +124,6 @@ const RestaurantSchema = new Schema<IRestaurant>(
     },
     qrCodeUrl: {
       type: String,
-    },
-    paymentInfo: {
-      upiId: {
-        type: String,
-      },
-      accountHolderName: {
-        type: String,
-      },
     },
   },
   {
