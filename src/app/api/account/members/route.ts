@@ -7,6 +7,8 @@ import User from '@/models/User';
 import { generateInviteToken } from '@/lib/token';
 
 // List members
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const auth = getUserFromRequest(request);

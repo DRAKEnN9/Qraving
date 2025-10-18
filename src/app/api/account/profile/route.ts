@@ -3,6 +3,8 @@ import dbConnect from '@/lib/mongodb';
 import { getUserFromRequest, verifyUserPassword } from '@/lib/auth';
 import User from '@/models/User';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const auth = getUserFromRequest(request);

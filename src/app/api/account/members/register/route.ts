@@ -6,6 +6,8 @@ import { verifyInviteToken } from '@/lib/token';
 import { hashPassword, generateToken } from '@/lib/auth';
 
 // Validate an invite and expose immutable registration fields (email, role)
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

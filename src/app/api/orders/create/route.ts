@@ -5,6 +5,8 @@ import Order from '@/models/Order';
 import Restaurant from '@/models/Restaurant';
 // Note: Order placement emails are disabled. Email will be sent only when status changes to 'preparing'.
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   console.log('=== Create Order API Called ===');
   

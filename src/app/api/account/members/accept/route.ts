@@ -4,6 +4,8 @@ import { getUserFromRequest } from '@/lib/auth';
 import AccountMember from '@/models/AccountMember';
 import { verifyInviteToken } from '@/lib/token';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const auth = getUserFromRequest(request);

@@ -9,6 +9,8 @@ import { createRestaurantSchema } from '@/lib/validation';
 import { generateSlug } from '@/lib/utils';
 
 // GET owner's restaurants
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);

@@ -4,6 +4,8 @@ import User from '@/models/User';
 import { hashPassword, generateToken } from '@/lib/auth';
 import { signupSchema } from '@/lib/validation';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();

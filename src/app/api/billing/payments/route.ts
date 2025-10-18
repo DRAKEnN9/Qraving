@@ -5,6 +5,8 @@ import Payment from '@/models/Payment';
 import { resolveAccountOwnerPrivilege } from '@/lib/ownership';
 
 // GET payment history (invoices)
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);

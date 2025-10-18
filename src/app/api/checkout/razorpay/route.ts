@@ -19,6 +19,8 @@ try {
   console.error('Failed to initialize Razorpay:', error);
 }
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(_request: NextRequest) {
   // Order payments are disabled for food ordering
   return NextResponse.json(

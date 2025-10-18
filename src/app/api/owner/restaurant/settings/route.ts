@@ -5,6 +5,8 @@ import { getUserFromRequest } from '@/lib/auth';
 import { resolveEffectiveOwnerId, resolveAccountRole } from '@/lib/ownership';
 
 // PATCH /api/owner/restaurant/settings - Update restaurant settings
+export const dynamic = 'force-dynamic';
+
 export async function PATCH(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);

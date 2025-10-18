@@ -5,6 +5,8 @@ import Subscription from '@/models/Subscription';
 import { getRazorpay } from '@/lib/razorpay';
 import { resolveAccountOwnerPrivilege } from '@/lib/ownership';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);

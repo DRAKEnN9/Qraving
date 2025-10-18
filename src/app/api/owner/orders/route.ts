@@ -7,6 +7,8 @@ import { getUserFromRequest } from '@/lib/auth';
 import { resolveEffectiveOwnerId } from '@/lib/ownership';
 
 // GET orders for owner's restaurant
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);

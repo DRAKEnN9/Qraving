@@ -7,6 +7,8 @@ import { resolveEffectiveOwnerId } from '@/lib/ownership';
 import { updateOrderStatusSchema } from '@/lib/validation';
 
 // PATCH update order status
+export const dynamic = 'force-dynamic';
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

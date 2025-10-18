@@ -7,6 +7,8 @@ import Order from '@/models/Order';
 import Subscription from '@/models/Subscription';
 import AccountMember from '@/models/AccountMember';
 
+export const dynamic = 'force-dynamic';
+
 export async function DELETE(request: NextRequest) {
   try {
     const auth = getUserFromRequest(request);

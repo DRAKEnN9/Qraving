@@ -9,6 +9,8 @@ import { resolveEffectiveOwnerId } from '@/lib/ownership';
 import { createMenuItemSchema } from '@/lib/validation';
 
 // GET menu items for a restaurant
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);

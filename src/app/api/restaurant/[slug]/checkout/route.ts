@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 // Please use `/api/checkout/razorpay` for gateway-based orders.
 
 // POST create checkout session
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   return NextResponse.json(
     {

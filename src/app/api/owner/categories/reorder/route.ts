@@ -6,6 +6,8 @@ import { getUserFromRequest } from '@/lib/auth';
 import { resolveEffectiveOwnerId } from '@/lib/ownership';
 
 // POST /api/owner/categories/reorder - Reorder categories
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);

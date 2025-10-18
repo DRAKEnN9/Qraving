@@ -3,6 +3,8 @@ import dbConnect from '@/lib/mongodb';
 import Order from '@/models/Order';
 import Restaurant from '@/models/Restaurant';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
   try {
     await dbConnect();

@@ -6,6 +6,8 @@ import { resolveEffectiveOwnerId, resolveAccountRole } from '@/lib/ownership';
 import { updateRestaurantSchema } from '@/lib/validation';
 
 // GET single restaurant
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -8,6 +8,8 @@ import { resolveEffectiveOwnerId } from '@/lib/ownership';
 import { createCategorySchema } from '@/lib/validation';
 
 // GET categories for a restaurant
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);

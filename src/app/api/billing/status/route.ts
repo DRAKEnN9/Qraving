@@ -4,6 +4,8 @@ import { getUserFromRequest } from '@/lib/auth';
 import Subscription from '@/models/Subscription';
 import { resolveEffectiveOwnerId } from '@/lib/ownership';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const user = getUserFromRequest(request);
