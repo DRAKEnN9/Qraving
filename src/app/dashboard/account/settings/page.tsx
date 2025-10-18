@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
 export default function AccountSettingsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);

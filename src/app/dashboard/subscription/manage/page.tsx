@@ -6,6 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 
 type Status = 'none' | 'trialing' | 'active' | 'cancelled' | 'past_due' | 'incomplete' | 'halted' | 'pending';
 
+export const dynamic = 'force-dynamic';
+
 export default function ManageSubscriptionPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();

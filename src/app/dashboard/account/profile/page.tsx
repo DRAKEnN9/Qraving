@@ -156,6 +156,8 @@ function AccountProfileContent() {
   );
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function AccountProfilePage() {
   return (
     <Suspense fallback={

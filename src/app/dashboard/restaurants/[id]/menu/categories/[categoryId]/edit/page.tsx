@@ -12,6 +12,8 @@ interface Category {
   sortOrder: number;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function EditCategoryPage() {
   const params = useParams();
   const router = useRouter();

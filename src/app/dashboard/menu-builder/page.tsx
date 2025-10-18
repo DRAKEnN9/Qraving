@@ -13,6 +13,8 @@ interface Restaurant {
   logoUrl?: string;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function MenuBuilderPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);

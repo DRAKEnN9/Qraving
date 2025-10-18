@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Hash } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default function NewCategoryPage() {
   const params = useParams();
   const router = useRouter();

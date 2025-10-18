@@ -28,6 +28,8 @@ interface Restaurant {
   lastScanned?: string;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function QRCodesPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);

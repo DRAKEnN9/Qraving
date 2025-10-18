@@ -33,6 +33,8 @@ interface Payment {
   invoiceUrl?: string;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function BillingPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();

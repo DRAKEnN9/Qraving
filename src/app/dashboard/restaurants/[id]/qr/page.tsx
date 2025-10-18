@@ -14,6 +14,8 @@ interface Restaurant {
   qrCodeUrl?: string;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function QRCodePage() {
   const params = useParams();
   const router = useRouter();

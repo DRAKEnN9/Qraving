@@ -242,6 +242,8 @@ function SortableCategory({
   );
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function MenuManagementPage() {
   const params = useParams();
   const router = useRouter();

@@ -39,6 +39,8 @@ interface MenuItem {
   soldOut: boolean;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function EditMenuItemPage() {
   const params = useParams();
   const router = useRouter();

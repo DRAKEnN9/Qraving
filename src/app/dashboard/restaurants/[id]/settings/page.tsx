@@ -27,6 +27,8 @@ interface Restaurant {
   };
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function RestaurantSettingsPage() {
   const params = useParams();
   const router = useRouter();

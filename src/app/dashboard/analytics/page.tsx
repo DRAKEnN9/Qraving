@@ -57,6 +57,8 @@ interface Analytics {
   }> | null;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function AnalyticsPage() {
   const router = useRouter();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);

@@ -26,6 +26,8 @@ interface Modifier {
   priceDelta: number;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function NewMenuItemPage() {
   const params = useParams();
   const router = useRouter();

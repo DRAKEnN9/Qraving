@@ -45,6 +45,8 @@ interface ToastState {
   type: 'success' | 'waiting' | 'preparing';
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function OrderWaitingPage() {
   const params = useParams();
   const router = useRouter();

@@ -18,6 +18,8 @@ interface Restaurant {
   currency?: string;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function CheckoutPage() {
   const params = useParams();
   const router = useRouter();

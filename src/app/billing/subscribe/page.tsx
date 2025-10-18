@@ -202,6 +202,8 @@ function SubscribePageContent() {
   );
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function SubscribePage() {
   return (
     <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>

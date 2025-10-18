@@ -8,6 +8,8 @@ interface Category { _id: string; name: string; }
 
 interface ModifierForm { id: string; name: string; priceRupees: string; }
 
+export const dynamic = 'force-dynamic';
+
 export default function NewItemPage() {
   const router = useRouter();
   const params = useParams();

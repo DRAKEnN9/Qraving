@@ -38,6 +38,8 @@ interface Order {
   createdAt: string;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function DashboardPage() {
   const router = useRouter();
   const { socket, isConnected, joinRestaurant } = useSocket();

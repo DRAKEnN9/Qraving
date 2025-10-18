@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Upload, MapPin, Users, Hash, Store } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default function NewRestaurantPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
