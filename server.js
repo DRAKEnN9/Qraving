@@ -24,7 +24,7 @@ app.prepare().then(() => {
 
   // Initialize Socket.io
   const origins = process.env.NODE_ENV === 'production'
-    ? [process.env.APP_URL]
+    ? [process.env.APP_URL, process.env.RENDER_EXTERNAL_URL].filter(Boolean)
     : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://0.0.0.0:3000', `http://${hostname}:${port}`];
   const io = new Server(server, {
     cors: {

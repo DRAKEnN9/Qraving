@@ -33,7 +33,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
   useEffect(() => {
     // Initialize socket connection
-    const socketInstance = io({
+    const socketUrl = process.env.NODE_ENV === 'production' 
+      ? process.env.NEXT_PUBLIC_API_URL || 'https://your-render-service.onrender.com'
+      : 'http://localhost:3000';
+    
+    const socketInstance = io(socketUrl, {
       // MUST match server.js path exactly (no trailing slash)
       path: '/socket.io',
       // Prefer websockets to avoid xhr polling issues behind proxies
