@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# firebase
+qraving-920ea-firebase-adminsdk-fbsvc-19065a9c70
