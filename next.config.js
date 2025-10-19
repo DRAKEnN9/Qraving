@@ -29,23 +29,11 @@ const nextConfig = {
       },
     ],
   },
+  // IMPORTANT: Disable API rewrites to avoid routing loops in production.
+  // If you need to proxy to an external API, prefer a distinct prefix like '/proxy/:path*'
+  // and update client fetches explicitly, to avoid shadowing internal Next API routes.
   async rewrites() {
-    const dest = process.env.NEXT_PUBLIC_API_URL;
-    if (!dest) return [];
-    try {
-      // Validate URL
-      const url = new URL(dest);
-      const base = url.toString().replace(/\/$/, '');
-      return [
-        {
-          source: '/api/:path*',
-          destination: `${base}/api/:path*`,
-        },
-      ];
-    } catch (_) {
-      // If invalid, skip rewrites
-      return [];
-    }
+    return [];
   },
   webpack: (config) => {
     config.resolve = config.resolve || {};
