@@ -12,14 +12,19 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { slug: string } }
 ) {
+  console.log('🔍 API /api/menu/[slug] called with params:', params);
   try {
     await dbConnect();
+    console.log('📡 Database connected successfully');
     const { slug } = params;
     const normalizedSlug = (slug || '').toString().trim().toLowerCase();
+    console.log('🎯 Looking for restaurant with slug:', normalizedSlug);
 
     // Find restaurant by slug
     const restaurant = await Restaurant.findOne({ slug: normalizedSlug }).lean();
+    console.log('🏪 Restaurant found:', restaurant ? restaurant.name : 'NOT FOUND');
     if (!restaurant) {
+      console.log('❌ Restaurant not found for slug:', normalizedSlug);
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
     }
 
@@ -27,11 +32,13 @@ export async function GET(
     const categories = await Category.find({ restaurantId: restaurant._id })
       .sort({ order: 1 })
       .lean();
+    console.log('📂 Found categories:', categories.length);
 
     // Get all menu items for this restaurant
     const menuItems = await MenuItem.find({ restaurantId: restaurant._id })
       .sort({ order: 1 })
       .lean();
+    console.log('🍽️ Found menu items:', menuItems.length);
 
     // Group items by category
     const categoriesWithItems = categories.map((category) => ({
@@ -51,6 +58,7 @@ export async function GET(
         })),
     }));
 
+    console.log('✅ Returning menu data for restaurant:', restaurant.name);
     return NextResponse.json({
       restaurant: {
         _id: String(restaurant._id),
@@ -64,7 +72,8 @@ export async function GET(
       categories: categoriesWithItems,
     });
   } catch (error) {
-    console.error('Get menu error:', error);
+    console.error('❌ Get menu error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
