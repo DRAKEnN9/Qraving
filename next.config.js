@@ -9,8 +9,6 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
-  // Force all rendering to be dynamic
-  output: 'standalone',
   images: {
     remotePatterns: [
       {

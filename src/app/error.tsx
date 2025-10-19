@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-
-export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { AlertCircle, Home, RefreshCw } from 'lucide-react';
 
