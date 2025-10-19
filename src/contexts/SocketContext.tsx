@@ -33,11 +33,12 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
   useEffect(() => {
     // Initialize socket connection
-    const socketUrl = process.env.NODE_ENV === 'production' 
-      ? process.env.NEXT_PUBLIC_API_URL || 'https://your-render-service.onrender.com'
+    const socketUrl = process.env.NODE_ENV === 'production'
+      // Prefer explicit backend URL; otherwise use current origin (single-host)
+      ? (process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? window.location.origin : undefined))
       : 'http://localhost:3000';
     
-    const socketInstance = io(socketUrl, {
+    const socketInstance = io(socketUrl as string | undefined, {
       // MUST match server.js path exactly (no trailing slash)
       path: '/socket.io',
       // Prefer websockets to avoid xhr polling issues behind proxies
