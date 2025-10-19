@@ -5,6 +5,8 @@ export interface IUser extends Document {
   email: string;
   passwordHash?: string;
   googleId?: string;
+  profilePicture?: string;
+  isVerified: boolean;
   role: 'owner' | 'admin';
   createdAt: Date;
   updatedAt: Date;
@@ -30,6 +32,13 @@ const UserSchema = new Schema<IUser>(
     },
     googleId: {
       type: String,
+    },
+    profilePicture: {
+      type: String,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
     },
     role: {
       type: String,
