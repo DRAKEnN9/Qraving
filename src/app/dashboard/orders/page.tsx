@@ -27,6 +27,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { useSocket } from '@/contexts/SocketContext';
 import { useNotifications } from '@/contexts/NotificationContext';
+import toast from 'react-hot-toast';
 
 interface OrderItem {
   menuItemId: string;
@@ -262,7 +263,11 @@ function OrdersPageContent() {
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (!response.ok) throw new Error('Failed to update order status');
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        toast.error(err.error || 'Failed to update order status');
+        return;
+      }
 
       // Update local state
       setOrders((prev) =>
@@ -272,8 +277,13 @@ function OrdersPageContent() {
       if (selectedOrder?._id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
       }
+
+      toast.success('Order updated');
+      // Refetch to keep stats and other filters accurate
+      fetchOrders();
     } catch (err: any) {
       console.error('Failed to update order status:', err);
+      toast.error('Failed to update order status');
     }
   };
 

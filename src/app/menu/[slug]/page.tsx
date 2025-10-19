@@ -56,7 +56,7 @@ function CustomerMenuPageContent() {
     setRestaurantId,
     clearCart,
   } = useCart();
-  const { socket, isConnected } = useSocket();
+  const { socket, isConnected, joinRestaurant, leaveRestaurant } = useSocket();
 
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -119,12 +119,18 @@ function CustomerMenuPageContent() {
     }
   };
 
+  // Join restaurant room so customers receive real-time menu updates (sold out, price changes)
+  useEffect(() => {
+    if (!restaurant || !socket || !isConnected) return;
+    joinRestaurant(restaurant._id);
+    return () => {
+      leaveRestaurant(restaurant._id);
+    };
+  }, [restaurant?._id, socket, isConnected, joinRestaurant, leaveRestaurant]);
+
   // Real-time updates for menu items (e.g., soldOut toggles)
   useEffect(() => {
     if (!restaurant || !socket || !isConnected) return;
-    
-    // Customers should NOT join restaurant room - that's only for restaurant staff
-    // They will join their specific order room when they place an order
     
     const handleMenuItemUpdated = (data: any) => {
       setCategories((prev) =>

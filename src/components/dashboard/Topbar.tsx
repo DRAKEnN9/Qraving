@@ -2,21 +2,7 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  Search,
-  Plus,
-  Bell,
-  User,
-  Settings,
-  LogOut,
-  ChevronDown,
-  CreditCard,
-  UserPlus,
-  FolderPlus,
-  UtensilsCrossed,
-  Menu,
-  X,
-} from 'lucide-react';
+import { Search, Plus, Bell, LogOut, FolderPlus, UtensilsCrossed, Menu, X, ChevronDown } from 'lucide-react';
 
 interface TopbarProps {
   user?: {
@@ -32,7 +18,6 @@ function TopbarContent({ user, onLogout, sidebarCollapsed, onOpenMobileSidebar }
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
-  const [profileOpen, setProfileOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
 
   // Keep Topbar search in sync with URL (?search=...)
@@ -108,7 +93,7 @@ function TopbarContent({ user, onLogout, sidebarCollapsed, onOpenMobileSidebar }
           </form>
         </div>
 
-        {/* Right side - Quick Actions & Profile */}
+        {/* Right side - Quick Actions & Logout */}
         <div className="flex items-center gap-2 lg:gap-3">
           {/* Quick Actions Dropdown */}
           <div className="relative hidden sm:block">
@@ -162,98 +147,18 @@ function TopbarContent({ user, onLogout, sidebarCollapsed, onOpenMobileSidebar }
             <span className="absolute right-1 top-1 h-2 w-2 animate-pulse rounded-full bg-red-500"></span>
           </button>
 
-          {/* Profile Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setProfileOpen(!profileOpen)}
-              onBlur={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                  setTimeout(() => setProfileOpen(false), 200);
-                }
-              }}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 px-2 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-800 lg:px-3 lg:py-2"
-            >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-xs font-bold text-white lg:text-sm">
-                {user?.name?.[0]?.toUpperCase() || 'U'}
-              </div>
-              <span className="hidden lg:inline">{user?.name || 'User'}</span>
-              <ChevronDown className="hidden h-4 w-4 text-slate-400 lg:block" />
-            </button>
-
-            {profileOpen && (
-              <div className="absolute right-0 mt-2 w-64 rounded-lg border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                {/* User Info */}
-                <div className="border-b border-slate-100 px-3 py-3 dark:border-slate-800">
-                  <p className="font-medium text-slate-900 dark:text-slate-100">{user?.name}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">{user?.email}</p>
-                </div>
-
-                {/* Account Section */}
-                <div className="py-2">
-                  <p className="px-3 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400">Account</p>
-                  <button
-                    onClick={() => {
-                      router.push('/dashboard/account/profile');
-                      setProfileOpen(false);
-                    }}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                  >
-                    <User className="h-4 w-4 text-emerald-600" />
-                    Profile
-                  </button>
-                  <button
-                    onClick={() => {
-                      router.push('/dashboard/settings');
-                      setProfileOpen(false);
-                    }}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    <Settings className="h-4 w-4 text-emerald-600" />
-                    Settings
-                  </button>
-                </div>
-
-                {/* Subscription Section */}
-                <div className="border-t border-slate-100 py-2 dark:border-slate-800">
-                  <p className="px-3 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400">Subscription</p>
-                  <button
-                    onClick={() => {
-                      router.push('/dashboard/billing');
-                      setProfileOpen(false);
-                    }}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    <CreditCard className="h-4 w-4 text-emerald-600" />
-                    Billing
-                  </button>
-                  <button
-                    onClick={() => {
-                      router.push('/dashboard/settings?tab=team');
-                      setProfileOpen(false);
-                    }}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    <UserPlus className="h-4 w-4 text-emerald-600" />
-                    Team
-                  </button>
-                </div>
-
-                {/* Logout */}
-                <div className="border-t border-slate-100 pt-2 dark:border-slate-800">
-                  <button
-                    onClick={() => {
-                      onLogout();
-                      setProfileOpen(false);
-                    }}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Logout
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Logout Button only */}
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-800"
+            title="Logout"
+          >
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-xs font-bold text-white lg:text-sm">
+              {user?.name?.[0]?.toUpperCase() || 'U'}
+            </div>
+            <span className="hidden lg:inline">Logout</span>
+            <LogOut className="h-4 w-4 text-slate-400" />
+          </button>
         </div>
       </div>
     </header>

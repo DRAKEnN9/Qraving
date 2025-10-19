@@ -31,9 +31,10 @@ interface NotificationProviderProps {
 export function NotificationProvider({ children }: NotificationProviderProps) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const { socket, isConnected } = useSocket();
+  const { socket, isConnected, joinRestaurant, leaveRestaurant } = useSocket();
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [joinedRestaurantId, setJoinedRestaurantId] = useState<string | null>(null);
 
   // Check notification permission on mount
   useEffect(() => {
@@ -122,6 +123,41 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       console.error('Error playing notification sound:', error);
     }
   }, [soundEnabled]);
+
+  // Ensure we are in the staff restaurant room so we get 'new-order' regardless of the page
+  useEffect(() => {
+    let cancelled = false;
+    const joinStaffRoom = async () => {
+      try {
+        if (!isConnected) return;
+        // Only staff users need to join
+        const isStaff = !!user && (user.role === 'owner' || user.accountRole === 'owner' || user.accountRole === 'admin');
+        if (!isStaff) return;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        if (!token) return;
+
+        const res = await fetch('/api/owner/restaurant', { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json().catch(() => ({}));
+        const rid = data?.restaurants?.[0]?._id as string | undefined;
+        if (!rid) return;
+
+        if (!cancelled && joinedRestaurantId !== rid) {
+          if (joinedRestaurantId) {
+            try { leaveRestaurant(joinedRestaurantId); } catch {}
+          }
+          joinRestaurant(rid);
+          setJoinedRestaurantId(rid);
+        }
+      } catch (e) {
+        // Best-effort; ignore
+      }
+    };
+
+    joinStaffRoom();
+    return () => {
+      cancelled = true;
+    };
+  }, [isConnected, user?.id, user?.role, user?.accountRole, joinRestaurant, leaveRestaurant, joinedRestaurantId]);
 
   // Show browser notification
   const showBrowserNotification = useCallback(

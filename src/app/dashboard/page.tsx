@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useSocket } from '@/contexts/SocketContext';
 import { formatDistanceToNow } from 'date-fns';
+import toast from 'react-hot-toast';
 
 interface Order {
   _id: string;
@@ -224,7 +225,11 @@ export default function DashboardPage() {
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (!response.ok) throw new Error('Failed to update order status');
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        toast.error(err.error || 'Failed to update order status');
+        return;
+      }
 
       // Update local state
       setLiveOrders((prev) =>
@@ -232,8 +237,12 @@ export default function DashboardPage() {
           .map((order) => (order._id === orderId ? { ...order, status: newStatus } : order))
           .filter((o) => o.status === 'pending' || o.status === 'preparing')
       );
+      toast.success('Order updated');
+      // Refresh stats and lists
+      fetchDashboardData();
     } catch (err: any) {
       console.error('Failed to update order status:', err);
+      toast.error('Failed to update order status');
     }
   };
 
