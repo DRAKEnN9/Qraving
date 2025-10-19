@@ -103,8 +103,18 @@ function CustomerMenuPageContent() {
       const response = await fetch(`/api/menu/${slug}`);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch menu');
+        let message = `Failed to fetch menu (${response.status})`;
+        try {
+          const ct = response.headers.get('content-type') || '';
+          if (ct.includes('application/json')) {
+            const err = await response.json();
+            message = err?.error || message;
+          } else {
+            const text = await response.text();
+            if (text) message = text;
+          }
+        } catch {}
+        throw new Error(message);
       }
 
       const data = await response.json();
