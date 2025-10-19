@@ -6,17 +6,19 @@ import MenuItem from '@/models/MenuItem';
 
 // GET public menu for a restaurant (no auth required)
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: { slug: string } }
 ) {
   try {
     await dbConnect();
-    const { slug } = await params;
+    const { slug } = params;
+    const normalizedSlug = (slug || '').toString().trim().toLowerCase();
 
     // Find restaurant by slug
-    const restaurant = await Restaurant.findOne({ slug });
+    const restaurant = await Restaurant.findOne({ slug: normalizedSlug }).lean();
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
     }
@@ -27,9 +29,7 @@ export async function GET(
       .lean();
 
     // Get all menu items for this restaurant
-    const menuItems = await MenuItem.find({
-      restaurantId: restaurant._id,
-    })
+    const menuItems = await MenuItem.find({ restaurantId: restaurant._id })
       .sort({ order: 1 })
       .lean();
 
@@ -56,9 +56,9 @@ export async function GET(
         _id: String(restaurant._id),
         name: restaurant.name,
         slug: restaurant.slug,
-        logo: restaurant.logoUrl,
+        logo: (restaurant as any).logoUrl,
         address: restaurant.address,
-        tableNumber: restaurant.tableNumber,
+        tableNumber: (restaurant as any).tableNumber,
         currency: (restaurant as any).settings?.currency || 'INR',
       },
       categories: categoriesWithItems,
