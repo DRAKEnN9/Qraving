@@ -5,26 +5,69 @@ import bcrypt from 'bcryptjs';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 
-// Initialize Firebase Admin SDK
-if (!admin.apps.length) {
-  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-  
-  if (serviceAccountKey) {
-    try {
-      const serviceAccount = JSON.parse(serviceAccountKey);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-      });
-    } catch (error) {
-      console.error('Failed to initialize Firebase Admin:', error);
+// Robust, lazy initialization for Firebase Admin
+function ensureFirebaseAdmin() {
+  if (admin.apps.length) return;
+
+  const tryParse = (text: string) => {
+    try { return JSON.parse(text); } catch { return null; }
+  };
+
+  const raw = (process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '').trim();
+  const b64 = (process.env.FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 || '').trim();
+
+  const candidates: string[] = [];
+  if (raw) {
+    candidates.push(raw);
+    // Strip surrounding quotes if present (common mistake: wrapping JSON in single quotes)
+    if ((raw.startsWith("'") && raw.endsWith("'")) || (raw.startsWith('"') && raw.endsWith('"'))) {
+      candidates.push(raw.slice(1, -1));
     }
+  }
+  if (b64) {
+    try {
+      const decoded = Buffer.from(b64, 'base64').toString('utf8');
+      candidates.push(decoded);
+    } catch { /* ignore base64 decode errors */ }
+  }
+
+  let serviceAccount: any = null;
+  for (const candidate of candidates) {
+    const parsed = tryParse(candidate);
+    if (parsed && typeof parsed === 'object') {
+      serviceAccount = parsed;
+      break;
+    }
+  }
+
+  if (!serviceAccount) {
+    console.error('Failed to initialize Firebase Admin: service account env is not valid JSON');
+    return;
+  }
+
+  if (serviceAccount.private_key && typeof serviceAccount.private_key === 'string') {
+    // Convert escaped newlines to actual newlines
+    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+  }
+
+  try {
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  } catch (err) {
+    console.error('Failed to initialize Firebase Admin:', err);
   }
 }
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
+    ensureFirebaseAdmin();
+    if (!admin.apps.length) {
+      console.error('Firebase Admin not initialized - check FIREBASE_SERVICE_ACCOUNT_KEY');
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+    }
+
     await dbConnect();
     
     const { idToken, isNewUser } = await request.json();
