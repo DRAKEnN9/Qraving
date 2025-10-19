@@ -29,6 +29,24 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    const dest = process.env.NEXT_PUBLIC_API_URL;
+    if (!dest) return [];
+    try {
+      // Validate URL
+      const url = new URL(dest);
+      const base = url.toString().replace(/\/$/, '');
+      return [
+        {
+          source: '/api/:path*',
+          destination: `${base}/api/:path*`,
+        },
+      ];
+    } catch (_) {
+      // If invalid, skip rewrites
+      return [];
+    }
+  },
   webpack: (config) => {
     config.resolve = config.resolve || {};
     config.resolve.alias = {
