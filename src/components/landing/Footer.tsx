@@ -55,7 +55,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/signup" className="font-semibold text-orange-400 transition-colors hover:text-orange-300">
+                <Link href="/signup?plan=advance&interval=yearly" className="font-semibold text-orange-400 transition-colors hover:text-orange-300">
                   Start Free Trial →
                 </Link>
               </li>

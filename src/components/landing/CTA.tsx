@@ -42,7 +42,7 @@ export default function CTA() {
 
           <div className="flex reveal-on-scroll flex-col items-center justify-center gap-4 sm:flex-row" data-reveal-delay="350ms">
             <Link
-              href="/signup"
+              href="/signup?plan=advance&interval=yearly"
               className="group flex w-full items-center justify-center gap-3 rounded-full bg-white px-10 py-5 text-xl font-black text-orange-600 shadow-2xl transition-all hover:scale-105 hover:shadow-white/50 sm:w-auto"
             >
               Start Your Free Trial

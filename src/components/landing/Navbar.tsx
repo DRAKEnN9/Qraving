@@ -96,7 +96,7 @@ export default function Navbar() {
             Login
           </Link>
           <Link
-            href="/signup"
+            href="/signup?plan=advance&interval=yearly"
             className="group relative overflow-hidden rounded-full bg-gradient-to-r from-orange-600 to-red-600 px-8 py-3 font-bold text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl"
           >
             <span className="relative z-10">Get Started Free</span>
@@ -149,7 +149,7 @@ export default function Navbar() {
               Login
             </Link>
             <Link
-              href="/signup"
+              href="/signup?plan=advance&interval=yearly"
               className="block rounded-lg bg-gradient-to-r from-orange-600 to-red-600 px-4 py-3 text-center font-bold text-white shadow-lg transition-all hover:shadow-xl"
               onClick={() => setIsMenuOpen(false)}
             >

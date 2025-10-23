@@ -56,7 +56,7 @@ export default function Hero() {
             {/* CTA Buttons */}
             <div className="mb-12 flex reveal-on-scroll flex-col items-start gap-4 sm:flex-row" data-reveal-delay="350ms">
               <Link
-                href="/signup"
+                href="/signup?plan=advance&interval=yearly"
                 className="group relative overflow-hidden rounded-full bg-gradient-to-r from-orange-600 to-red-600 px-10 py-5 text-xl font-bold text-white shadow-2xl transition-all hover:scale-105 hover:shadow-orange-500/50"
               >
                 <span className="relative z-10 flex items-center gap-3">

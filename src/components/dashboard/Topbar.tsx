@@ -139,9 +139,10 @@ function TopbarContent({ user, onLogout, sidebarCollapsed, onOpenMobileSidebar }
 
           {/* Notifications */}
           <button
-            onClick={() => router.push('/dashboard/orders')}
+            onClick={() => router.push('/dashboard/notifications')}
             className="relative rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
             aria-label="Notifications"
+            title="View Notifications"
           >
             <Bell className="h-5 w-5" />
             <span className="absolute right-1 top-1 h-2 w-2 animate-pulse rounded-full bg-red-500"></span>

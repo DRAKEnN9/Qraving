@@ -13,10 +13,12 @@ import {
   Star,
   Crown,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface Subscription {
   status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'cancelled' | 'none';
   plan: 'basic' | 'advance';
+  interval?: 'monthly' | 'yearly';
   currentPeriodEnd?: string;
   trialEndsAt?: string;
   cancelAtPeriodEnd?: boolean;
@@ -47,6 +49,9 @@ export default function BillingPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [manageInterval, setManageInterval] = useState<'monthly' | 'yearly'>('monthly');
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState<boolean>(true);
+  const [catalogInterval, setCatalogInterval] = useState<'monthly' | 'yearly'>('monthly');
 
   useEffect(() => {
     if (authLoading) return;
@@ -70,6 +75,7 @@ export default function BillingPage() {
         if (data.status !== 'none') {
           setSubscription(data);
         }
+        if (data.interval) setCatalogInterval(data.interval);
       }
       
       setLoading(false);
@@ -114,7 +120,7 @@ export default function BillingPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ currentPassword }),
+        body: JSON.stringify({ currentPassword, atPeriodEnd: cancelAtPeriodEnd }),
       });
 
       const data = await response.json();
@@ -122,8 +128,12 @@ export default function BillingPage() {
 
       setShowCancelModal(false);
       setCurrentPassword('');
-      // Refresh billing info
-      fetchBillingInfo();
+      // Show success message and redirect to homepage
+      toast.success('Subscription cancelled successfully');
+      // Redirect to homepage after short delay
+      setTimeout(() => {
+        window.location.href = '/?subscription=cancelled';
+      }, 2000);
     } catch (err: any) {
       setActionError(err.message);
     } finally {
@@ -150,6 +160,7 @@ export default function BillingPage() {
         },
         body: JSON.stringify({
           plan: newPlan,
+          interval: manageInterval,
           currentPassword,
         }),
       });
@@ -171,32 +182,35 @@ export default function BillingPage() {
   const plans = [
     {
       id: 'basic',
-      name: 'Basic',
+      name: 'Essential',
       price: 1499,
       icon: Zap,
       features: [
         'QR Menu for 1 Restaurant',
         'Drag & drop menu builder',
         'Order management dashboard',
-        'Email notifications',
+        'Real-time order notifications',
         'UPI payment integration',
-        'Basic support (Email)',
+        'Basic analytics & insights',
+        'Email & chat support',
       ],
     },
     {
       id: 'advance',
-      name: 'Advance',
+      name: 'Professional',
       price: 1999,
       icon: Star,
       popular: true,
       features: [
-        'Everything in Basic',
-        'Up to 3 Restaurants',
-        'Analytics & Reports',
-        'Peak time reports',
+        'Everything in Essential',
+        'Advanced analytics & reports',
+        'Peak time optimization',
         'Popular items tracking',
         'Exportable CSV reports',
-        'Priority support (Chat)',
+        'Customer feedback system',
+        'Priority support (24/7)',
+        'Custom branding options',
+        'Multi-language support',
       ],
     },
   ];
@@ -276,6 +290,11 @@ export default function BillingPage() {
                       })}
                     </span>
                   )}
+                  {subscription.interval && (
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                      • {subscription.interval === 'yearly' ? 'Yearly' : 'Monthly'} billing
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -299,11 +318,25 @@ export default function BillingPage() {
                 </div>
               </div>
             )}
+            {subscription.cancelAtPeriodEnd && (
+              <div className="mb-4 rounded-lg bg-yellow-50 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0 text-yellow-700" />
+                  <div>
+                    <p className="font-medium text-yellow-900">Cancellation Scheduled</p>
+                    <p className="text-sm text-yellow-700">Your subscription will cancel at the end of the current billing period.</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <button
-              onClick={() => setShowManageModal(true)}
+              onClick={() => {
+                setManageInterval(subscription?.interval || 'monthly');
+                setShowManageModal(true);
+              }}
               className="w-full sm:w-auto rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               Manage Plan
@@ -336,7 +369,25 @@ export default function BillingPage() {
 
       {/* Available Plans */}
       <div className={`mb-8 ${blocked ? 'pointer-events-none select-none blur-sm' : ''}`}>
-        <h2 className="mb-4 text-center text-2xl font-bold text-slate-900 dark:text-slate-100">Available Plans</h2>
+        <h2 className="mb-2 text-center text-2xl font-bold text-slate-900 dark:text-slate-100">Available Plans</h2>
+        <div className="mb-4 flex items-center justify-center">
+          <div className="inline-flex rounded-full bg-slate-100 p-1 text-xs font-semibold dark:bg-slate-800">
+            <button
+              onClick={() => setCatalogInterval('monthly')}
+              className={`px-3 py-1.5 rounded-full ${catalogInterval === 'monthly' ? 'bg-emerald-600 text-white' : 'text-slate-700 dark:text-slate-200'}`}
+              aria-pressed={catalogInterval === 'monthly'}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setCatalogInterval('yearly')}
+              className={`px-3 py-1.5 rounded-full ${catalogInterval === 'yearly' ? 'bg-emerald-600 text-white' : 'text-slate-700 dark:text-slate-200'}`}
+              aria-pressed={catalogInterval === 'yearly'}
+            >
+              Yearly
+            </button>
+          </div>
+        </div>
         <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
           {plans.map((plan) => {
             const Icon = plan.icon;
@@ -347,10 +398,10 @@ export default function BillingPage() {
                 key={plan.id}
                 className={`relative rounded-xl border-2 bg-white p-6 shadow-sm transition-all dark:bg-slate-900 ${
                   plan.popular
-                    ? 'border-emerald-500 shadow-lg'
+                    ? 'border-emerald-500 shadow-lg dark:border-emerald-400'
                     : isCurrentPlan
-                    ? 'border-emerald-300'
-                    : 'border-slate-200 hover:border-emerald-300'
+                    ? 'border-emerald-300 dark:border-emerald-400'
+                    : 'border-slate-200 hover:border-emerald-300 dark:border-slate-700 dark:hover:border-emerald-400'
                 }`}
               >
                 {plan.popular && (
@@ -362,11 +413,11 @@ export default function BillingPage() {
                 )}
 
                 <div className="mb-4 flex items-center justify-between">
-                  <div className={`rounded-lg p-3 ${plan.popular ? 'bg-emerald-100' : 'bg-slate-100'}`}>
-                    <Icon className={`h-6 w-6 ${plan.popular ? 'text-emerald-600' : 'text-slate-600'}`} />
+                  <div className={`rounded-lg p-3 ${plan.popular ? 'bg-emerald-100' : 'bg-slate-100 dark:bg-slate-800'}`}>
+                    <Icon className={`h-6 w-6 ${plan.popular ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-300'}`} />
                   </div>
                   {isCurrentPlan && (
-                    <div className="flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+                    <div className="flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
                       <CheckCircle className="h-3 w-3" />
                       Current
                     </div>
@@ -375,8 +426,10 @@ export default function BillingPage() {
 
                 <h3 className="mb-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{plan.name}</h3>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold text-slate-900 dark:text-slate-100">₹{plan.price}</span>
-                  <span className="text-slate-600 dark:text-slate-400">/month</span>
+                  <span className="text-4xl font-bold text-slate-900 dark:text-slate-100">
+                    ₹{catalogInterval === 'yearly' ? (plan.id === 'advance' ? 19999 : 14999) : plan.price}
+                  </span>
+                  <span className="text-slate-600 dark:text-slate-400">/{catalogInterval === 'yearly' ? 'year' : 'month'}</span>
                 </div>
 
                 <ul className="mb-6 space-y-3">
@@ -397,8 +450,12 @@ export default function BillingPage() {
                       ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                       : 'border border-emerald-600 text-emerald-600 hover:bg-emerald-50'
                   }`}
+                  onClick={() => {
+                    setManageInterval(catalogInterval);
+                    setShowManageModal(true);
+                  }}
                 >
-                  {isCurrentPlan ? 'Current Plan' : 'Upgrade'}
+                  {isCurrentPlan ? 'Current Plan' : 'Change Plan'}
                 </button>
               </div>
             );
@@ -538,6 +595,22 @@ export default function BillingPage() {
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                 Current Plan: <strong className="text-slate-900 dark:text-slate-100 capitalize">{subscription?.plan}</strong>
               </p>
+              <div className="mb-4 inline-flex rounded-full bg-slate-100 p-1 text-xs font-semibold" role="tablist" aria-label="Billing Interval">
+                <button
+                  onClick={() => setManageInterval('monthly')}
+                  className={`px-3 py-1.5 rounded-full ${manageInterval === 'monthly' ? 'bg-emerald-600 text-white' : 'text-slate-700'}`}
+                  aria-pressed={manageInterval === 'monthly'}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setManageInterval('yearly')}
+                  className={`px-3 py-1.5 rounded-full ${manageInterval === 'yearly' ? 'bg-emerald-600 text-white' : 'text-slate-700'}`}
+                  aria-pressed={manageInterval === 'yearly'}
+                >
+                  Yearly
+                </button>
+              </div>
               
               <div className="grid gap-4 md:grid-cols-2">
                 {plans.map((plan) => {
@@ -549,8 +622,8 @@ export default function BillingPage() {
                       key={plan.id}
                       className={`rounded-xl border-2 p-4 ${
                         isCurrent
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-slate-200 hover:border-emerald-300'
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 dark:border-emerald-400'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-400'
                       }`}
                     >
                       <div className="mb-3 flex items-center justify-between">
@@ -564,7 +637,7 @@ export default function BillingPage() {
                           </span>
                         )}
                       </div>
-                      <p className="mb-3 text-2xl font-bold text-slate-900 dark:text-slate-100">₹{plan.price}/mo</p>
+                      <p className="mb-3 text-2xl font-bold text-slate-900 dark:text-white">₹{manageInterval === 'yearly' ? (plan.id === 'advance' ? 19999 : 14999) : plan.price}/{manageInterval === 'yearly' ? 'yr' : 'mo'}</p>
                       <ul className="mb-4 space-y-1 text-sm text-slate-600 dark:text-slate-400">
                         {plan.features.slice(0, 3).map((feature, idx) => (
                           <li key={idx} className="flex items-center gap-2">
@@ -595,7 +668,7 @@ export default function BillingPage() {
             </div>
 
             <div className="mb-4">
-              <label className="mb-2 block text-sm font-medium text-slate-700">
+              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Enter your password to confirm plan change
               </label>
               <input
@@ -605,7 +678,7 @@ export default function BillingPage() {
                   setCurrentPassword(e.target.value);
                   setActionError('');
                 }}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 placeholder="Your current password"
               />
             </div>
@@ -645,12 +718,26 @@ export default function BillingPage() {
             )}
 
             <p className="mb-4 text-slate-600 dark:text-slate-400">
-              Are you sure you want to cancel your subscription? You will lose access to all premium
-              features immediately.
+              {cancelAtPeriodEnd
+                ? 'Cancel at period end selected: You will retain access until the end of the current billing period.'
+                : 'You will lose access to premium features immediately after cancelling.'}
             </p>
 
             <div className="mb-4">
-              <label className="mb-2 block text-sm font-medium text-slate-700">
+              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Cancellation Options</label>
+              <div className="mb-4 flex items-center gap-2">
+                <input
+                  id="cancelAtEnd"
+                  type="checkbox"
+                  checked={cancelAtPeriodEnd}
+                  onChange={(e) => setCancelAtPeriodEnd(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                />
+                <label htmlFor="cancelAtEnd" className="text-sm text-slate-700 dark:text-slate-300">
+                  Cancel at the end of the current billing period (recommended)
+                </label>
+              </div>
+              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Enter your password to confirm cancellation
               </label>
               <input
@@ -660,7 +747,7 @@ export default function BillingPage() {
                   setCurrentPassword(e.target.value);
                   setActionError('');
                 }}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 placeholder="Your current password"
                 autoFocus
               />

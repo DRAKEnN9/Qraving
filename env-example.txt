@@ -1,0 +1,32 @@
+# Copy this file to .env.local and fill in your actual values
+
+# MongoDB connection string
+MONGODB_URI=mongodb://localhost:27017/qrmenumanager
+# OR for MongoDB Atlas:
+# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/qrmenumanager
+
+# JWT Secret (generate a strong random string)
+JWT_SECRET=your-super-secret-jwt-key-here
+
+# Razorpay credentials
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+
+# Razorpay Plan IDs (create these in your Razorpay dashboard)
+RAZORPAY_PLAN_BASIC_MONTHLY=plan_id_for_basic_monthly
+RAZORPAY_PLAN_BASIC_YEARLY=plan_id_for_basic_yearly
+RAZORPAY_PLAN_ADVANCE_MONTHLY=plan_id_for_advance_monthly
+RAZORPAY_PLAN_ADVANCE_YEARLY=plan_id_for_advance_yearly
+
+# App URL (for production)
+APP_URL=http://localhost:3000
+
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# Email configuration (optional)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password

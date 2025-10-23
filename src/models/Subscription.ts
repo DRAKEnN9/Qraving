@@ -6,12 +6,14 @@ export interface ISubscription extends Document {
   razorpayCustomerId?: string;
   razorpaySubscriptionId?: string;
   plan: 'basic' | 'advance';
+  interval: 'monthly' | 'yearly';
   planPricePaise?: number;
   status: 'trialing' | 'active' | 'cancelled' | 'past_due' | 'incomplete' | 'halted' | 'pending';
   trialEndsAt?: Date;
   currentPeriodStart?: Date;
   currentPeriodEnd?: Date;
   cancelAtPeriodEnd?: boolean;
+  hasUsedTrial?: boolean; // Track if user has ever used a trial
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +44,12 @@ const SubscriptionSchema = new Schema<ISubscription>(
       default: 'basic',
       required: true,
     },
+    interval: {
+      type: String,
+      enum: ['monthly', 'yearly'],
+      default: 'monthly',
+      required: true,
+    },
     planPricePaise: {
       type: Number,
     },
@@ -60,6 +68,10 @@ const SubscriptionSchema = new Schema<ISubscription>(
       type: Date,
     },
     cancelAtPeriodEnd: {
+      type: Boolean,
+      default: false,
+    },
+    hasUsedTrial: {
       type: Boolean,
       default: false,
     },

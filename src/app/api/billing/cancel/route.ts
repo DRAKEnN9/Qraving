@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
     
     const body = await request.json();
-    const { currentPassword } = body || {};
+    const { currentPassword, atPeriodEnd } = body || {};
     
     if (!currentPassword) {
       return NextResponse.json({ error: 'Current password required to cancel subscription' }, { status: 400 });
@@ -37,12 +37,55 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 404 });
     }
 
-    const rz = getRazorpay();
-    await rz.subscriptions.cancel(sub.razorpaySubscriptionId, { cancel_at_cycle_end: 0 } as any);
+    console.log('Cancelling subscription:', {
+      subscriptionId: sub._id,
+      currentStatus: sub.status,
+      atPeriodEnd,
+      cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
+      currentPeriodEnd: sub.currentPeriodEnd
+    });
 
-    sub.status = 'cancelled';
-    sub.cancelAtPeriodEnd = false;
-    await sub.save();
+    // Handle trial subscriptions separately - Razorpay doesn't allow canceling trials
+    if (sub.status === 'trialing') {
+      // For trial subscriptions, just mark as cancelled in our DB
+      sub.status = 'cancelled';
+      sub.cancelAtPeriodEnd = false; // Trial cancellations are immediate
+      sub.currentPeriodEnd = undefined; // Clear period end for trials
+      // Stamp trial end to the cancellation moment to prevent re-trial eligibility
+      sub.trialEndsAt = new Date();
+      sub.hasUsedTrial = true; // Ensure trial is marked as used when cancelled
+      await sub.save();
+      console.log('Trial subscription cancelled immediately, hasUsedTrial set to true');
+    } else {
+      // For active subscriptions, use Razorpay cancel API
+      const rz = getRazorpay();
+      const cancelAtCycleEnd = atPeriodEnd ? 1 : 0;
+      
+      try {
+        await rz.subscriptions.cancel(sub.razorpaySubscriptionId, { cancel_at_cycle_end: cancelAtCycleEnd } as any);
+        
+        if (cancelAtCycleEnd === 1) {
+          // Keep active until period end; mark flag
+          sub.cancelAtPeriodEnd = true;
+          // Status stays 'active' until period end
+          console.log('Subscription cancelled at period end, access continues until:', sub.currentPeriodEnd);
+        } else {
+          // Immediate cancel
+          sub.status = 'cancelled';
+          sub.cancelAtPeriodEnd = false;
+          sub.currentPeriodEnd = undefined; // Clear period end for immediate cancellation
+          console.log('Subscription cancelled immediately');
+        }
+        await sub.save();
+      } catch (razorpayError: any) {
+        // If Razorpay cancel fails, still mark as cancelled in our DB for consistency
+        console.warn('Razorpay cancel failed, marking as cancelled in DB:', razorpayError);
+        sub.status = 'cancelled';
+        sub.cancelAtPeriodEnd = false;
+        sub.currentPeriodEnd = undefined; // Clear period end for failed/immediate cancellation
+        await sub.save();
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

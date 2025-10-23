@@ -15,8 +15,10 @@ export default function ManageSubscriptionPage() {
   const [error, setError] = useState("");
   const [status, setStatus] = useState<Status>('none');
   const [plan, setPlan] = useState<'basic' | 'advance'>('basic');
+  const [interval, setInterval] = useState<'monthly' | 'yearly'>('monthly');
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState<boolean>(true);
   const [canceling, setCanceling] = useState(false);
   const [currentPassword, setCurrentPassword] = useState<string>("");
   const [showPasswordPrompt, setShowPasswordPrompt] = useState<string | null>(null);
@@ -32,8 +34,10 @@ export default function ManageSubscriptionPage() {
         if (d.error) throw new Error(d.error);
         setStatus(d.status || 'none');
         if (d.plan) setPlan(d.plan);
+        if (d.interval) setInterval(d.interval);
         if (d.trialEndsAt) setTrialEndsAt(d.trialEndsAt);
         if (d.currentPeriodEnd) setCurrentPeriodEnd(d.currentPeriodEnd);
+        if (typeof d.cancelAtPeriodEnd === 'boolean') setCancelAtPeriodEnd(!!d.cancelAtPeriodEnd);
       })
       .catch(e => setError(e.message || 'Failed to load subscription'))
       .finally(() => setLoading(false));
@@ -54,7 +58,7 @@ export default function ManageSubscriptionPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}` 
         },
-        body: JSON.stringify({ currentPassword })
+        body: JSON.stringify({ currentPassword, atPeriodEnd: cancelAtPeriodEnd })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to cancel');
@@ -75,7 +79,7 @@ export default function ManageSubscriptionPage() {
       setShowPasswordPrompt(`change-${targetPlan}`);
     } else {
       // New subscription, no password needed
-      router.push(`/billing/subscribe?plan=${targetPlan}`);
+      router.push(`/billing/subscribe?plan=${targetPlan}&interval=${interval}`);
     }
   };
   
@@ -97,6 +101,7 @@ export default function ManageSubscriptionPage() {
         },
         body: JSON.stringify({ 
           plan: targetPlan,
+          interval,
           currentPassword 
         })
       });
@@ -156,11 +161,17 @@ export default function ManageSubscriptionPage() {
             <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Current Status</h2>
             <p className="text-sm text-slate-700 dark:text-slate-300"><span className="font-semibold">Status:</span> {status}</p>
             <p className="text-sm text-slate-700 dark:text-slate-300"><span className="font-semibold">Plan:</span> {plan}</p>
+            <p className="text-sm text-slate-700 dark:text-slate-300"><span className="font-semibold">Billing:</span> {interval}</p>
             {trialEndsAt && (
               <p className="text-sm text-slate-700 dark:text-slate-300"><span className="font-semibold">Trial ends:</span> {new Date(trialEndsAt).toLocaleString()}</p>
             )}
             {currentPeriodEnd && (
               <p className="text-sm text-slate-700 dark:text-slate-300"><span className="font-semibold">Current period ends:</span> {new Date(currentPeriodEnd).toLocaleString()}</p>
+            )}
+            {cancelAtPeriodEnd && (
+              <div className="mt-3 rounded-lg bg-yellow-50 p-3 text-yellow-800 text-sm">
+                Cancellation scheduled at period end.
+              </div>
             )}
 
             <div className="mt-4 flex flex-wrap gap-3">
@@ -168,7 +179,7 @@ export default function ManageSubscriptionPage() {
                 onClick={() => changePlan(plan === 'basic' ? 'advance' : 'basic')}
                 className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700"
               >
-                {plan === 'basic' ? 'Upgrade to Advance' : 'Downgrade to Basic'}
+                {plan === 'basic' ? 'Upgrade to Professional' : 'Downgrade to Essential'}
               </button>
               {(status === 'active' || status === 'trialing') && (
                 <button
@@ -184,13 +195,30 @@ export default function ManageSubscriptionPage() {
 
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Plans</h2>
+            {/* Interval Toggle */}
+            <div className="mb-4 inline-flex rounded-full bg-slate-100 p-1 text-xs font-semibold" role="tablist" aria-label="Billing Interval">
+              <button
+                onClick={() => setInterval('monthly')}
+                className={`px-3 py-1.5 rounded-full ${interval === 'monthly' ? 'bg-emerald-600 text-white' : 'text-slate-700'}`}
+                aria-pressed={interval === 'monthly'}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setInterval('yearly')}
+                className={`px-3 py-1.5 rounded-full ${interval === 'yearly' ? 'bg-emerald-600 text-white' : 'text-slate-700'}`}
+                aria-pressed={interval === 'yearly'}
+              >
+                Yearly
+              </button>
+            </div>
             <div className="grid gap-4">
               <div className={`rounded-xl border p-4 ${plan === 'basic' ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200'}`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-slate-900 dark:text-slate-100">Basic</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">₹1,499 / month</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">1 Restaurant</p>
+                    <p className="font-semibold text-slate-900 dark:text-slate-100">Essential</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">₹{interval === 'yearly' ? '14,999 / year' : '1,499 / month'}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Perfect for single restaurant</p>
                   </div>
                   <button onClick={() => changePlan('basic')} className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50">Select</button>
                 </div>
@@ -198,9 +226,9 @@ export default function ManageSubscriptionPage() {
               <div className={`rounded-xl border p-4 ${plan === 'advance' ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200'}`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-slate-900 dark:text-slate-100">Advance</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">₹1,999 / month</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Up to 3 Restaurants</p>
+                    <p className="font-semibold text-slate-900 dark:text-slate-100">Professional</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">₹{interval === 'yearly' ? '19,999 / year' : '1,999 / month'}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">For growing restaurants</p>
                   </div>
                   <button onClick={() => changePlan('advance')} className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50">Select</button>
                 </div>
@@ -218,8 +246,24 @@ export default function ManageSubscriptionPage() {
                 {showPasswordPrompt === 'cancel' ? 'Cancel Subscription' : 'Change Plan'}
               </h3>
               <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
-                Please enter your current password to confirm this sensitive operation.
+                {showPasswordPrompt === 'cancel' 
+                  ? 'Choose when to cancel, then enter your password to confirm.' 
+                  : 'Please enter your current password to confirm this sensitive operation.'}
               </p>
+              {showPasswordPrompt === 'cancel' && (
+                <div className="mb-4 flex items-center gap-2">
+                  <input
+                    id="cancelAtEndModal"
+                    type="checkbox"
+                    checked={cancelAtPeriodEnd}
+                    onChange={(e) => setCancelAtPeriodEnd(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <label htmlFor="cancelAtEndModal" className="text-sm text-slate-700 dark:text-slate-300">
+                    Cancel at the end of the current billing period (recommended)
+                  </label>
+                </div>
+              )}
               <div className="mb-4">
                 <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Current Password</label>
                 <input

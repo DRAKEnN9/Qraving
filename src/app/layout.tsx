@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import { CartProvider } from '@/contexts/CartContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import SubscriptionGuard from '@/components/SubscriptionGuard';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,7 +72,11 @@ export default function RootLayout({
         <ThemeProvider>
           <SocketProvider>
             <NotificationProvider>
-              <CartProvider>{children}</CartProvider>
+              <CartProvider>
+                <SubscriptionGuard>
+                  {children}
+                </SubscriptionGuard>
+              </CartProvider>
             </NotificationProvider>
           </SocketProvider>
         </ThemeProvider>

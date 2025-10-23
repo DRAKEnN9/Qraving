@@ -9,7 +9,9 @@ import toast from 'react-hot-toast';
 function SignupPageContent() {
   const router = useRouter();
   const search = useSearchParams();
-  const selectedPlan = (search.get('plan') === 'advance' ? 'advance' : 'basic');
+  // Default to yearly advance plan for free trial
+  const selectedPlan = search.get('plan') || 'advance';
+  const selectedInterval = search.get('interval') || 'yearly';
   const { signInWithGoogle, loading: googleLoading } = useGoogleAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -40,8 +42,8 @@ function SignupPageContent() {
       // Store token
       localStorage.setItem('token', data.token);
       
-      // Redirect to subscription flow with selected plan
-      router.push(`/billing/subscribe?plan=${selectedPlan}`);
+      // Redirect to subscription flow with selected plan and interval
+      router.push(`/billing/subscribe?plan=${selectedPlan}&interval=${selectedInterval}`);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -82,7 +84,7 @@ function SignupPageContent() {
           // Existing user, proceed directly
           localStorage.setItem('token', data.token);
           toast.success('Signed up successfully!');
-          router.push(`/billing/subscribe?plan=${selectedPlan}`);
+          router.push(`/billing/subscribe?plan=${selectedPlan}&interval=${selectedInterval}`);
         }
       } catch (err: any) {
         setError(err.message);
@@ -120,7 +122,7 @@ function SignupPageContent() {
 
       localStorage.setItem('token', googleUserData.token);
       toast.success('Account created successfully!');
-      router.push(`/billing/subscribe?plan=${selectedPlan}`);
+      router.push(`/billing/subscribe?plan=${selectedPlan}&interval=${selectedInterval}`);
     } catch (err: any) {
       setError(err.message);
     } finally {

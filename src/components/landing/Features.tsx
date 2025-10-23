@@ -126,7 +126,7 @@ export default function Features() {
             Ready to transform your restaurant?
           </p>
           <a
-            href="/signup"
+            href="/signup?plan=advance&interval=yearly"
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-600 to-red-600 px-8 py-4 text-lg font-bold text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl"
           >
             Start Your Free Trial

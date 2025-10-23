@@ -18,7 +18,7 @@ export default function HomePage() {
                 Login
               </Button>
             </Link>
-            <Link href="/signup">
+            <Link href="/signup?plan=advance&interval=yearly">
               <Button size="sm">Get Started</Button>
             </Link>
           </div>
@@ -37,7 +37,7 @@ export default function HomePage() {
           Create QR code menus, manage orders in real-time, and accept payments seamlessly.
         </p>
         <div className="flex justify-center space-x-4">
-          <Link href="/signup">
+          <Link href="/signup?plan=advance&interval=yearly">
             <Button size="lg">Start Free Trial</Button>
           </Link>
           <Link href="/menu/demo-restaurant">

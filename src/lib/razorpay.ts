@@ -17,12 +17,23 @@ export function getRazorpay(): Razorpay {
 }
 
 export const RAZORPAY_PLANS = {
-  basic: process.env.RAZORPAY_PLAN_BASIC || '',
-  advance: process.env.RAZORPAY_PLAN_ADVANCE || '',
-};
+  basic: {
+    monthly: process.env.RAZORPAY_PLAN_BASIC_MONTHLY || '',
+    yearly: process.env.RAZORPAY_PLAN_BASIC_YEARLY || '',
+  },
+  advance: {
+    monthly: process.env.RAZORPAY_PLAN_ADVANCE_MONTHLY || '',
+    yearly: process.env.RAZORPAY_PLAN_ADVANCE_YEARLY || '',
+  },
+} as const;
 
 export function assertPlansConfigured() {
-  if (!RAZORPAY_PLANS.basic || !RAZORPAY_PLANS.advance) {
-    throw new Error('Razorpay plan IDs are not configured. Set RAZORPAY_PLAN_BASIC and RAZORPAY_PLAN_ADVANCE');
+  const missing: string[] = [];
+  if (!RAZORPAY_PLANS.basic.monthly) missing.push('RAZORPAY_PLAN_BASIC_MONTHLY');
+  if (!RAZORPAY_PLANS.basic.yearly) missing.push('RAZORPAY_PLAN_BASIC_YEARLY');
+  if (!RAZORPAY_PLANS.advance.monthly) missing.push('RAZORPAY_PLAN_ADVANCE_MONTHLY');
+  if (!RAZORPAY_PLANS.advance.yearly) missing.push('RAZORPAY_PLAN_ADVANCE_YEARLY');
+  if (missing.length) {
+    throw new Error('Razorpay plan IDs are not configured. Missing: ' + missing.join(', '));
   }
 }

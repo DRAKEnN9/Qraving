@@ -16,6 +16,54 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const checkSubscriptionAndRedirect = async (token: string) => {
+    try {
+      // Check subscription status
+      const response = await fetch('/api/billing/status', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Check if user has valid subscription access
+        const now = new Date();
+        let hasValidAccess = false;
+
+        if (data.status === 'trialing') {
+          // Trial users have access until trial ends
+          hasValidAccess = !data.trialEndsAt || new Date(data.trialEndsAt) > now;
+        } else if (data.status === 'active') {
+          // Active subscriptions have access
+          hasValidAccess = true;
+        } else if (data.status === 'cancelled') {
+          // Cancelled subscriptions only have access if cancelled at period end and period hasn't ended
+          hasValidAccess = Boolean(
+            data.cancelAtPeriodEnd === true &&
+            data.currentPeriodEnd &&
+            new Date(data.currentPeriodEnd) > now
+          );
+        }
+        // All other statuses (past_due, incomplete, etc.) have no access
+
+        if (hasValidAccess) {
+          // Has valid subscription, go to dashboard
+          router.push('/dashboard');
+        } else {
+          // No valid subscription, redirect to subscription page with yearly advance default
+          router.push('/billing/subscribe?plan=advance&interval=yearly&reason=no_subscription');
+        }
+      } else {
+        // Error checking subscription, assume no subscription and redirect to subscribe
+        router.push('/billing/subscribe?plan=advance&interval=yearly&reason=check_failed');
+      }
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      // On error, redirect to subscription page
+      router.push('/billing/subscribe?plan=advance&interval=yearly&reason=error');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -36,8 +84,8 @@ export default function LoginPage() {
       // Store token
       localStorage.setItem('token', data.token);
       
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Check subscription status before redirecting
+      await checkSubscriptionAndRedirect(data.token);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -71,8 +119,8 @@ export default function LoginPage() {
         localStorage.setItem('token', data.token);
         toast.success('Signed in successfully!');
         
-        // Redirect to dashboard
-        router.push('/dashboard');
+        // Check subscription status before redirecting
+        await checkSubscriptionAndRedirect(data.token);
       } catch (err: any) {
         setError(err.message);
       }
@@ -165,7 +213,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center text-sm text-gray-600">
             Don't have an account?{' '}
-            <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link href="/signup?plan=advance&interval=yearly" className="font-medium text-indigo-600 hover:text-indigo-500">
               Sign up
             </Link>
           </div>

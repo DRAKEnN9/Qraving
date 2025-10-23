@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromRequest } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Order from '@/models/Order';
 import Restaurant from '@/models/Restaurant';
-import Subscription from '@/models/Subscription';
-import { getUserFromRequest } from '@/lib/auth';
 import { resolveEffectiveOwnerId } from '@/lib/ownership';
+import { checkApiSubscriptionAccess } from '@/lib/apiSubscriptionGuard';
 
-// GET orders for owner's restaurant
 export const dynamic = 'force-dynamic';
-
 export async function GET(request: NextRequest) {
   try {
+    // Check subscription access first
+    const subscriptionCheck = await checkApiSubscriptionAccess(request);
+    if (subscriptionCheck) return subscriptionCheck;
+
     const user = getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -26,12 +28,6 @@ export async function GET(request: NextRequest) {
 
     const ownerId = await resolveEffectiveOwnerId(user);
     if (!ownerId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    // Require active or trialing subscription
-    const sub = await Subscription.findOne({ ownerId });
-    if (!sub || (sub.status !== 'active' && sub.status !== 'trialing')) {
-      return NextResponse.json({ error: 'Subscription required' }, { status: 402 });
-    }
 
     // If restaurantId missing, fallback to owner's first restaurant
     if (!restaurantId) {
