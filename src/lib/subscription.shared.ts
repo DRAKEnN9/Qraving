@@ -23,6 +23,7 @@ export const publicPages = [
   '/api/billing/webhook',
   '/api/billing/status', // Allow checking subscription status
   '/api/billing/trial-eligibility', // Allow checking trial eligibility
+  '/api/billing/sync', // Allow manual subscription sync
   '/api/webhooks/razorpay', // Allow Razorpay webhooks
 ];
 

@@ -41,10 +41,6 @@ export async function checkSubscriptionAccess(user: TokenPayload): Promise<Subsc
     } else if (subscription.status === 'active') {
       // Active subscriptions have access
       hasValidAccess = true;
-    } else if (subscription.status === 'pending') {
-      // Pending subscriptions that have been created (user went through checkout) should have temporary access
-      // This handles the case where payment succeeded but webhook hasn't activated yet
-      hasValidAccess = Boolean(subscription.razorpaySubscriptionId);
     } else if (subscription.status === 'cancelled') {
       // Cancelled subscriptions only have access if:
       // 1. They were cancelled at period end (cancelAtPeriodEnd = true) AND

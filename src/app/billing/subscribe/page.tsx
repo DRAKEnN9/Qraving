@@ -130,11 +130,18 @@ function SubscribePageContent() {
             toast.success('Subscription started! Payment processed.');
           }
           try {
-            // Force refresh billing status so pending flips to active
+            // Force immediate sync with Razorpay to activate subscription
+            await fetch('/api/billing/sync', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            // Also refresh status as backup
             await fetch('/api/billing/status?refresh=true', {
               headers: { Authorization: `Bearer ${token}` },
             });
-          } catch {}
+          } catch (e) {
+            console.warn('Failed to sync subscription status:', e);
+          }
           router.push('/dashboard');
         },
       };

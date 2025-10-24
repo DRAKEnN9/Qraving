@@ -83,9 +83,6 @@ export function useSubscriptionAccess(): SubscriptionStatus {
         } else if (data.status === 'active') {
           // Active subscriptions have access
           hasValidAccess = true;
-        } else if (data.status === 'pending') {
-          // Pending subscriptions (post-payment, pre-webhook) should have access
-          hasValidAccess = true;
         } else if (data.status === 'cancelled') {
           // Cancelled subscriptions only have access if:
           // 1. They were cancelled at period end (cancelAtPeriodEnd = true) AND

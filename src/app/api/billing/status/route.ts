@@ -33,29 +33,37 @@ export async function GET(request: NextRequest) {
     const forceRefresh = url.searchParams.get('refresh') === 'true';
     const needsRefresh = forceRefresh || sub.status === 'pending' || sub.status === 'incomplete' || sub.status === 'halted' || sub.status === 'past_due';
 
-    if (needsRefresh && sub?.razorpaySubscriptionId) {
+    if (needsRefresh && sub.razorpaySubscriptionId) {
       try {
         const rz = getRazorpay();
         const remote: any = await rz.subscriptions.fetch(sub.razorpaySubscriptionId);
         const mapStatus = (s: string) => {
           switch (s) {
-            case 'active': return 'active' as const;
-            case 'pending': return 'pending' as const;
-            case 'created': return 'pending' as const;
-            case 'authenticated': return 'pending' as const;
-            case 'halted': return 'halted' as const;
-            case 'cancelled': return 'cancelled' as const;
-            case 'completed': return 'cancelled' as const;
-            case 'expired': return 'cancelled' as const;
+            case 'active': return 'active';
+            case 'pending': return 'pending';
+            case 'created': return 'pending';
+            case 'authenticated': return 'trialing'; // Razorpay "authenticated" = trial period
+            case 'halted': return 'halted';
+            case 'cancelled': return 'cancelled';
+            case 'completed': return 'active'; // Completed = payment successful
+            case 'expired': return 'cancelled';
             default: return sub!.status;
           }
         };
         const newStatus = mapStatus(remote?.status);
         const epochToDate = (e?: number) => (typeof e === 'number' ? new Date(e * 1000) : undefined);
-        sub!.status = newStatus;
-        sub!.currentPeriodStart = epochToDate(remote?.current_start ?? remote?.start_at) || sub!.currentPeriodStart;
-        sub!.currentPeriodEnd = epochToDate(remote?.current_end ?? remote?.charge_at) || sub!.currentPeriodEnd;
-        await sub!.save();
+        sub.status = newStatus as any;
+        
+        // If transitioning to trialing, mark trial as used and set trial end date
+        if (newStatus === 'trialing') {
+          sub.hasUsedTrial = true;
+          const trialEnd = epochToDate(remote?.current_end ?? remote?.charge_at);
+          if (trialEnd) sub.trialEndsAt = trialEnd;
+        }
+        
+        sub.currentPeriodStart = epochToDate(remote?.current_start ?? remote?.start_at) || sub.currentPeriodStart;
+        sub.currentPeriodEnd = epochToDate(remote?.current_end ?? remote?.charge_at) || sub.currentPeriodEnd;
+        await sub.save();
       } catch (e) {
         console.warn('Failed to refresh subscription from Razorpay:', e);
       }

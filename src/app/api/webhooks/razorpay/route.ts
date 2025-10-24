@@ -8,9 +8,7 @@ export const dynamic = 'force-dynamic';
 function verifySignature(payload: string, signature: string | null, secret: string): boolean {
   if (!signature) return false;
   const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
-  // Razorpay sends signature in format: algorithm=hash
-  const receivedHash = signature.includes('=') ? signature.split('=')[1] : signature;
-  return expected === receivedHash;
+  return expected === signature;
 }
 
 function epochToDate(epoch?: number | null): Date | undefined {
@@ -32,11 +30,8 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get('x-razorpay-signature');
 
   if (!verifySignature(bodyText, signature, secret)) {
-    console.warn('Webhook signature verification failed:', { signature, bodyLength: bodyText.length });
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
-
-  console.log('✅ Webhook signature verified');
 
   let body: any;
   try {
@@ -51,35 +46,31 @@ export async function POST(request: NextRequest) {
   const invEntity = body?.payload?.invoice?.entity;
 
   const razorpaySubscriptionId: string | undefined = subEntity?.id || payEntity?.subscription_id || invEntity?.subscription_id;
-  
-  console.log('📧 Webhook received:', { event, razorpaySubscriptionId });
-  
   if (!razorpaySubscriptionId) {
-    console.log('⚠️ No subscription ID found in webhook payload');
     return NextResponse.json({ ok: true, note: 'No subscription id in payload' });
   }
 
   await dbConnect();
   const sub = await Subscription.findOne({ razorpaySubscriptionId });
   if (!sub) {
-    console.log('⚠️ No local subscription found for Razorpay ID:', razorpaySubscriptionId);
     return NextResponse.json({ ok: true, note: 'No local subscription found for id' });
   }
 
-  console.log('🔍 Found subscription:', { _id: sub._id, currentStatus: sub.status, ownerId: sub.ownerId });
-
   try {
     switch (event) {
+      case 'subscription.authenticated': {
+        // Razorpay sets "authenticated" for trial subscriptions
+        const trialEnd = epochToDate(subEntity?.current_end ?? subEntity?.charge_at);
+        sub.status = 'trialing';
+        sub.hasUsedTrial = true; // Mark trial as used
+        if (trialEnd) sub.trialEndsAt = trialEnd;
+        await sub.save();
+        console.log(`Subscription ${sub._id} set to trialing, trial ends at:`, trialEnd);
+        break;
+      }
       case 'subscription.activated': {
         const currentStart = epochToDate(subEntity?.current_start ?? subEntity?.start_at);
         const currentEnd = epochToDate(subEntity?.current_end ?? subEntity?.charge_at);
-        console.log('🟢 Activating subscription:', { 
-          id: sub._id, 
-          from: sub.status, 
-          to: 'active',
-          currentStart: currentStart?.toISOString(),
-          currentEnd: currentEnd?.toISOString()
-        });
         sub.status = 'active';
         if (currentStart) sub.currentPeriodStart = currentStart;
         if (currentEnd) sub.currentPeriodEnd = currentEnd;
@@ -108,13 +99,30 @@ export async function POST(request: NextRequest) {
         await sub.save();
         break;
       }
+      case 'subscription.completed': {
+        // Subscription completed (one-time payment processed)
+        sub.status = 'active';
+        const currentStart = epochToDate(subEntity?.current_start ?? subEntity?.start_at);
+        const currentEnd = epochToDate(subEntity?.current_end ?? subEntity?.charge_at);
+        if (currentStart) sub.currentPeriodStart = currentStart;
+        if (currentEnd) sub.currentPeriodEnd = currentEnd;
+        await sub.save();
+        console.log(`Subscription ${sub._id} completed and activated`);
+        break;
+      }
+      case 'subscription.charged': {
+        // Recurring payment processed successfully
+        if (sub.status !== 'active') {
+          sub.status = 'active';
+          await sub.save();
+        }
+        break;
+      }
       case 'invoice.paid':
       case 'payment.captured':
       case 'payment.authorized': {
-        console.log(`💳 Payment event ${event} for subscription:`, { id: sub._id, currentStatus: sub.status });
-        // If we were pending and a payment/invoice came in for this subscription, mark active
-        if (sub.status === 'pending') {
-          console.log('🟢 Promoting pending subscription to active after payment');
+        // Payment successful - activate subscription immediately
+        if (sub.status === 'pending' || sub.status === 'incomplete') {
           sub.status = 'active';
           // Try to capture period end if present on invoice
           const endEpoch = invEntity?.period_end ?? invEntity?.billing_end ?? undefined;
@@ -124,8 +132,7 @@ export async function POST(request: NextRequest) {
           if (startDate) sub.currentPeriodStart = startDate;
           if (endDate) sub.currentPeriodEnd = endDate;
           await sub.save();
-        } else {
-          console.log('📝 Payment received but subscription already active, no action needed');
+          console.log(`Payment successful - subscription ${sub._id} activated`);
         }
         break;
       }
@@ -135,10 +142,9 @@ export async function POST(request: NextRequest) {
       }
     }
   } catch (e: any) {
-    console.error('❌ Webhook processing error:', e);
+    console.error('Webhook processing error:', e);
     return NextResponse.json({ error: 'Processing error' }, { status: 500 });
   }
 
-  console.log('✅ Webhook processed successfully');
   return NextResponse.json({ ok: true });
 }
