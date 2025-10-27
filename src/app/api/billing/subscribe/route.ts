@@ -107,27 +107,46 @@ export async function POST(request: NextRequest) {
 
     const razorpay = getRazorpay();
 
-    // Create subscription on Razorpay
+    // Create subscription on Razorpay with autopay enabled
     const createPayload: any = {
       plan_id: planId,
-      total_count: interval === 'yearly' ? 1 : 12,
-      customer_notify: 1,
+      total_count: 120, // Allow long-running subscriptions (10 years)
+      customer_notify: 1, // Notify customer via email/SMS
+      quantity: 1,
+      addons: [],
       notes: {
         ownerId: String(ownerId),
         plan,
         interval,
       },
     };
+    
+    // Only include notify_info if we have email or contact to avoid Razorpay errors
+    if (email || contact) {
+      createPayload.notify_info = {};
+      if (email) createPayload.notify_info.notify_email = email;
+      if (contact) createPayload.notify_info.notify_phone = contact;
+    }
     // Only set start_at for a future-dated trial start
     if (shouldStartTrial && startAtEpoch) {
       createPayload.start_at = startAtEpoch;
     }
 
-    const subscription = await razorpay.subscriptions.create(createPayload as any);
+    console.log('Creating Razorpay subscription with payload:', JSON.stringify(createPayload, null, 2));
+    
+    let subscription: any;
+    try {
+      subscription = await razorpay.subscriptions.create(createPayload as any);
+      console.log('Razorpay subscription created:', subscription.id, 'status:', subscription.status);
+    } catch (razorpayError: any) {
+      console.error('Razorpay subscription creation failed:', razorpayError);
+      throw new Error(`Razorpay error: ${razorpayError.error?.description || razorpayError.message}`);
+    }
 
     // Update DB with subscription id
     sub.razorpaySubscriptionId = subscription.id;
     await sub.save();
+    console.log('Subscription saved to DB with Razorpay ID:', subscription.id);
 
     return NextResponse.json({
       success: true,

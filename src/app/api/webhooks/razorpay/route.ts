@@ -111,10 +111,23 @@ export async function POST(request: NextRequest) {
         break;
       }
       case 'subscription.charged': {
-        // Recurring payment processed successfully
-        if (sub.status !== 'active') {
-          sub.status = 'active';
+        // Recurring payment processed successfully - update billing period
+        // Clear any past_due status from previous failed attempts
+        sub.status = 'active';
+        const currentStart = epochToDate(subEntity?.current_start ?? subEntity?.start_at);
+        const currentEnd = epochToDate(subEntity?.current_end ?? subEntity?.charge_at);
+        if (currentStart) sub.currentPeriodStart = currentStart;
+        if (currentEnd) sub.currentPeriodEnd = currentEnd;
+        await sub.save();
+        console.log(`Subscription ${sub._id} charged successfully, period: ${currentStart?.toISOString()} - ${currentEnd?.toISOString()}`);
+        break;
+      }
+      case 'payment.failed': {
+        // Recurring payment failed - mark as past_due
+        if (payEntity?.subscription_id === razorpaySubscriptionId) {
+          sub.status = 'past_due';
           await sub.save();
+          console.log(`Payment failed for subscription ${sub._id}, status: past_due`);
         }
         break;
       }

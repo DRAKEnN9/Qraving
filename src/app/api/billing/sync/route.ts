@@ -34,7 +34,20 @@ export async function POST(request: NextRequest) {
 
     try {
       const rz = getRazorpay();
+      
+      // Add small delay to ensure Razorpay has processed the subscription
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const remote: any = await rz.subscriptions.fetch(sub.razorpaySubscriptionId);
+      
+      if (!remote || !remote.status) {
+        console.warn(`No valid remote subscription data for ${sub.razorpaySubscriptionId}`);
+        return NextResponse.json({ 
+          success: false,
+          error: 'Subscription not found on Razorpay',
+          note: 'Subscription may still be processing'
+        }, { status: 404 });
+      }
       
       const mapStatus = (s: string) => {
         switch (s) {

@@ -129,19 +129,21 @@ function SubscribePageContent() {
           } else {
             toast.success('Subscription started! Payment processed.');
           }
-          try {
-            // Force immediate sync with Razorpay to activate subscription
-            await fetch('/api/billing/sync', {
-              method: 'POST',
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            // Also refresh status as backup
-            await fetch('/api/billing/status?refresh=true', {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-          } catch (e) {
-            console.warn('Failed to sync subscription status:', e);
-          }
+          // Try to sync subscription status (non-blocking)
+          fetch('/api/billing/sync', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+          })
+            .then(res => res.json())
+            .then(data => console.log('Subscription synced:', data))
+            .catch(e => console.warn('Sync failed (non-critical):', e));
+          
+          // Also refresh status as backup (non-blocking)
+          fetch('/api/billing/status?refresh=true', {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+            .then(() => console.log('Status refreshed'))
+            .catch(e => console.warn('Refresh failed (non-critical):', e));
           router.push('/dashboard');
         },
       };
@@ -303,6 +305,22 @@ function SubscribePageContent() {
               />
             </div>
           </div>
+        </div>
+
+        <div className="mb-6 text-center text-xs text-gray-500">
+          By subscribing, you agree to our{' '}
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-700 underline">
+            Terms of Service
+          </a>
+          ,{' '}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-700 underline">
+            Privacy Policy
+          </a>
+          , and{' '}
+          <a href="/refund" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-700 underline">
+            Refund Policy
+          </a>
+          .
         </div>
 
         <div className="flex items-center justify-between">
