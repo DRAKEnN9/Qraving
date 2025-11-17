@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import dbConnect from '@/lib/mongodb';
 import Subscription from '@/models/Subscription';
+import Payment from '@/models/Payment';
 
 export const dynamic = 'force-dynamic';
 
@@ -120,6 +121,65 @@ export async function POST(request: NextRequest) {
         if (currentEnd) sub.currentPeriodEnd = currentEnd;
         await sub.save();
         console.log(`Subscription ${sub._id} charged successfully, period: ${currentStart?.toISOString()} - ${currentEnd?.toISOString()}`);
+
+        // Try to record the successful charge as a payment as well
+        try {
+          const filter: any = payEntity?.id
+            ? { razorpayPaymentId: payEntity.id }
+            : invEntity?.id
+            ? { razorpayInvoiceId: invEntity.id }
+            : { _id: undefined };
+          const paidAt = epochToDate(payEntity?.captured_at) || epochToDate(invEntity?.paid_at) || new Date();
+          await Payment.findOneAndUpdate(
+            filter,
+            {
+              ownerId: sub.ownerId,
+              subscriptionId: sub._id,
+              razorpayPaymentId: payEntity?.id,
+              razorpayInvoiceId: invEntity?.id || payEntity?.invoice_id,
+              amount: typeof payEntity?.amount === 'number' ? payEntity.amount : typeof invEntity?.amount_paid === 'number' ? invEntity.amount_paid : 0,
+              currency: payEntity?.currency || invEntity?.currency || 'INR',
+              status: 'captured',
+              method: payEntity?.method,
+              description: invEntity?.description || payEntity?.description,
+              invoiceUrl: invEntity?.short_url || invEntity?.invoice_url || invEntity?.receipt,
+              paidAt,
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
+        } catch (e) {
+          console.warn('Failed to upsert payment record for subscription.charged:', e);
+        }
+        break;
+      }
+      case 'payment.refunded': {
+        // Mark payment as refunded in our records
+        try {
+          const filter: any = payEntity?.id
+            ? { razorpayPaymentId: payEntity.id }
+            : invEntity?.id
+            ? { razorpayInvoiceId: invEntity.id }
+            : { _id: undefined };
+          await Payment.findOneAndUpdate(
+            filter,
+            {
+              ownerId: sub.ownerId,
+              subscriptionId: sub._id,
+              razorpayPaymentId: payEntity?.id,
+              razorpayInvoiceId: invEntity?.id || payEntity?.invoice_id,
+              amount: typeof payEntity?.amount_refunded === 'number' && payEntity.amount_refunded > 0 ? payEntity.amount_refunded : typeof payEntity?.amount === 'number' ? payEntity.amount : 0,
+              currency: payEntity?.currency || invEntity?.currency || 'INR',
+              status: 'refunded',
+              method: payEntity?.method,
+              description: invEntity?.description || payEntity?.description,
+              invoiceUrl: invEntity?.short_url || invEntity?.invoice_url || invEntity?.receipt,
+              paidAt: epochToDate(payEntity?.captured_at) || epochToDate(invEntity?.paid_at) || undefined,
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
+        } catch (e) {
+          console.warn('Failed to upsert refunded payment record:', e);
+        }
         break;
       }
       case 'payment.failed': {
@@ -128,6 +188,35 @@ export async function POST(request: NextRequest) {
           sub.status = 'past_due';
           await sub.save();
           console.log(`Payment failed for subscription ${sub._id}, status: past_due`);
+
+          // Record failed payment
+          try {
+            const filter: any = payEntity?.id
+              ? { razorpayPaymentId: payEntity.id }
+              : invEntity?.id
+              ? { razorpayInvoiceId: invEntity.id }
+              : { _id: undefined }; // will not match anything if no ids
+            const paidAt = epochToDate(payEntity?.captured_at) || epochToDate(payEntity?.created_at);
+            await Payment.findOneAndUpdate(
+              filter,
+              {
+                ownerId: sub.ownerId,
+                subscriptionId: sub._id,
+                razorpayPaymentId: payEntity?.id,
+                razorpayInvoiceId: invEntity?.id || payEntity?.invoice_id,
+                amount: typeof payEntity?.amount === 'number' ? payEntity.amount : typeof invEntity?.amount_paid === 'number' ? invEntity.amount_paid : 0,
+                currency: payEntity?.currency || invEntity?.currency || 'INR',
+                status: 'failed',
+                method: payEntity?.method,
+                description: invEntity?.description || payEntity?.description,
+                invoiceUrl: invEntity?.short_url || invEntity?.invoice_url || invEntity?.receipt,
+                paidAt: paidAt,
+              },
+              { upsert: true, new: true, setDefaultsOnInsert: true }
+            );
+          } catch (e) {
+            console.warn('Failed to upsert failed payment record:', e);
+          }
         }
         break;
       }
@@ -146,6 +235,45 @@ export async function POST(request: NextRequest) {
           if (endDate) sub.currentPeriodEnd = endDate;
           await sub.save();
           console.log(`Payment successful - subscription ${sub._id} activated`);
+        }
+
+        // Record/Upsert payment (authorized/captured/invoice.paid)
+        try {
+          const filter: any = payEntity?.id
+            ? { razorpayPaymentId: payEntity.id }
+            : invEntity?.id
+            ? { razorpayInvoiceId: invEntity.id }
+            : { _id: undefined }; // will not match anything if no ids
+          const statusMap: Record<string, 'authorized' | 'captured'> = {
+            'payment.authorized': 'authorized',
+            'payment.captured': 'captured',
+            'invoice.paid': 'captured',
+          };
+          const status = statusMap[event] || 'captured';
+          const paidAt = 
+            epochToDate(payEntity?.captured_at) ||
+            epochToDate(invEntity?.paid_at) ||
+            (status === 'captured' ? new Date() : undefined);
+
+          await Payment.findOneAndUpdate(
+            filter,
+            {
+              ownerId: sub.ownerId,
+              subscriptionId: sub._id,
+              razorpayPaymentId: payEntity?.id,
+              razorpayInvoiceId: invEntity?.id || payEntity?.invoice_id,
+              amount: typeof payEntity?.amount === 'number' ? payEntity.amount : typeof invEntity?.amount_paid === 'number' ? invEntity.amount_paid : 0,
+              currency: payEntity?.currency || invEntity?.currency || 'INR',
+              status,
+              method: payEntity?.method,
+              description: invEntity?.description || payEntity?.description,
+              invoiceUrl: invEntity?.short_url || invEntity?.invoice_url || invEntity?.receipt,
+              paidAt,
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
+        } catch (e) {
+          console.warn('Failed to upsert payment record:', e);
         }
         break;
       }

@@ -8,12 +8,9 @@ import {
   CheckCircle,
   AlertCircle,
   Download,
-  ExternalLink,
   Zap,
   Star,
-  Crown,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 interface Subscription {
   status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'cancelled' | 'none';
@@ -44,14 +41,9 @@ export default function BillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const [showManageModal, setShowManageModal] = useState(false);
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [actionLoading, setActionLoading] = useState(false);
-  const [actionError, setActionError] = useState('');
-  const [manageInterval, setManageInterval] = useState<'monthly' | 'yearly'>('monthly');
-  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState<boolean>(true);
+  // Manage plan, payment methods, and inline cancel modal removed per requirements
   const [catalogInterval, setCatalogInterval] = useState<'monthly' | 'yearly'>('monthly');
+  const [changePlanNotice, setChangePlanNotice] = useState<{ plan: 'basic' | 'advance'; interval: 'monthly' | 'yearly' } | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -103,81 +95,7 @@ export default function BillingPage() {
     }
   };
 
-  const handleCancelSubscription = async () => {
-    if (!currentPassword) {
-      setActionError('Please enter your password');
-      return;
-    }
-
-    setActionLoading(true);
-    setActionError('');
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/billing/cancel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ currentPassword, atPeriodEnd: cancelAtPeriodEnd }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to cancel');
-
-      setShowCancelModal(false);
-      setCurrentPassword('');
-      // Show success message and redirect to homepage
-      toast.success('Subscription cancelled successfully');
-      // Redirect to homepage after short delay
-      setTimeout(() => {
-        window.location.href = '/?subscription=cancelled';
-      }, 2000);
-    } catch (err: any) {
-      setActionError(err.message);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleChangePlan = async (newPlan: 'basic' | 'advance') => {
-    if (!currentPassword) {
-      setActionError('Please enter your password');
-      return;
-    }
-
-    setActionLoading(true);
-    setActionError('');
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/billing/subscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          plan: newPlan,
-          interval: manageInterval,
-          currentPassword,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to change plan');
-
-      setShowManageModal(false);
-      setCurrentPassword('');
-      // Refresh billing info
-      fetchBillingInfo();
-    } catch (err: any) {
-      setActionError(err.message);
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  // Plan changes and inline cancel flow removed. Use dedicated cancellation page.
 
   const plans = [
     {
@@ -332,18 +250,9 @@ export default function BillingPage() {
           </div>
 
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-            <button
-              onClick={() => {
-                setManageInterval(subscription?.interval || 'monthly');
-                setShowManageModal(true);
-              }}
-              className="w-full sm:w-auto rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              Manage Plan
-            </button>
             {subscription.status !== 'cancelled' && (
               <button
-                onClick={() => setShowCancelModal(true)}
+                onClick={() => router.push('/dashboard/subscription/cancel')}
                 className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50"
               >
                 Cancel Subscription
@@ -441,55 +350,36 @@ export default function BillingPage() {
                   ))}
                 </ul>
 
-                <button
-                  disabled={isCurrentPlan}
-                  className={`w-full rounded-lg px-4 py-3 font-medium transition-colors ${
-                    isCurrentPlan
-                      ? 'cursor-not-allowed bg-slate-100 text-slate-400'
-                      : plan.popular
-                      ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                      : 'border border-emerald-600 text-emerald-600 hover:bg-emerald-50'
-                  }`}
-                  onClick={() => {
-                    setManageInterval(catalogInterval);
-                    setShowManageModal(true);
-                  }}
-                >
-                  {isCurrentPlan ? 'Current Plan' : 'Change Plan'}
-                </button>
+                {isCurrentPlan ? (
+                  <button
+                    disabled
+                    className="w-full cursor-not-allowed rounded-lg bg-slate-100 px-4 py-3 font-medium text-slate-400"
+                    title="Current plan"
+                  >
+                    Current Plan
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setChangePlanNotice({ plan: plan.id as 'basic' | 'advance', interval: catalogInterval })}
+                    className={`w-full rounded-lg px-4 py-3 font-medium transition-colors ${
+                      plan.popular ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'border border-emerald-600 text-emerald-600 hover:bg-emerald-50'
+                    }`}
+                  >
+                    Change Plan
+                  </button>
+                )}
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Payment Method - Only show if subscription exists */}
-      {subscription && subscription.status !== 'trialing' && (
-      <div className={`mb-8 rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm ${blocked ? 'pointer-events-none select-none blur-sm' : ''}`}>
-        <h2 className="mb-4 text-xl font-semibold text-slate-900 dark:text-slate-100">Payment Method</h2>
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <div className="rounded-lg bg-slate-100 p-3">
-              <CreditCard className="h-6 w-6 text-slate-600" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Payment method managed via Razorpay</p>
-              <button 
-                onClick={() => window.open('https://razorpay.com', '_blank')}
-                className="mt-2 text-sm font-medium text-emerald-600 hover:text-emerald-700"
-              >
-                Manage Payment Methods →
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      )}
+      {/* Payment Method section removed per requirements */
+      }
 
       {/* Payment History */}
       <div className={`rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 ${blocked ? 'pointer-events-none select-none blur-sm' : ''}`}>
         <h2 className="mb-4 text-xl font-semibold text-slate-900">Payment History</h2>
-        
         {paymentLoading ? (
           <div className="py-12 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
@@ -504,278 +394,83 @@ export default function BillingPage() {
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Payments will appear here once you subscribe</p>
           </div>
         ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
-          <table className="w-full min-w-[640px]">
-            <thead className="bg-slate-50 dark:bg-slate-800">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">
-                  Payment ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
-              {payments.map((payment) => (
-                <tr key={payment._id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900 dark:text-slate-100">
-                    {payment.razorpayPaymentId || payment._id.substring(0, 12) + '...'}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
-                    {new Date(payment.paidAt || payment.createdAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-900 dark:text-slate-100">
-                    ₹{(payment.amount / 100).toFixed(2)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                        payment.status === 'captured'
-                          ? 'bg-green-100 text-green-700'
-                          : payment.status === 'authorized'
-                          ? 'bg-blue-100 text-blue-700'
-                          : payment.status === 'created'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}
-                    >
-                      {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                    {payment.invoiceUrl ? (
-                      <a
-                        href={payment.invoiceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-medium text-emerald-600 hover:text-emerald-700"
-                      >
-                        <Download className="h-4 w-4" />
-                        Download
-                      </a>
-                    ) : (
-                      <span className="text-slate-400 text-xs">N/A</span>
-                    )}
-                  </td>
+          <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+            <table className="w-full min-w-[640px]">
+              <thead className="bg-slate-50 dark:bg-slate-800">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Payment ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
+                {payments.map((payment) => (
+                  <tr key={payment._id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {payment.razorpayPaymentId || payment._id.substring(0, 12) + '...'}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
+                      {new Date(payment.paidAt || payment.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-900 dark:text-slate-100">₹{(payment.amount / 100).toFixed(2)}</td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${payment.status === 'captured' ? 'bg-green-100 text-green-700' : payment.status === 'authorized' ? 'bg-blue-100 text-blue-700' : payment.status === 'created' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                        {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+                      {payment.invoiceUrl ? (
+                        <a href={payment.invoiceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-emerald-600 hover:text-emerald-700">
+                          <Download className="h-4 w-4" />
+                          Download
+                        </a>
+                      ) : (
+                        <span className="text-slate-400 text-xs">N/A</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
-      {/* Manage Plan Modal */}
-      {showManageModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
-            <h3 className="mb-4 text-2xl font-bold text-slate-900 dark:text-slate-100">Manage Subscription</h3>
-            
-            {actionError && (
-              <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-red-700">
-                {actionError}
+      {/* Change Plan Modal */}
+      {changePlanNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-amber-300 bg-white p-6 shadow-2xl dark:border-amber-900 dark:bg-slate-900">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="rounded-full bg-amber-100 p-3 dark:bg-amber-900/40">
+                <AlertCircle className="h-6 w-6 text-amber-600" />
               </div>
-            )}
-
-            <div className="mb-6">
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                Current Plan: <strong className="text-slate-900 dark:text-slate-100 capitalize">{subscription?.plan}</strong>
-              </p>
-              <div className="mb-4 inline-flex rounded-full bg-slate-100 p-1 text-xs font-semibold" role="tablist" aria-label="Billing Interval">
-                <button
-                  onClick={() => setManageInterval('monthly')}
-                  className={`px-3 py-1.5 rounded-full ${manageInterval === 'monthly' ? 'bg-emerald-600 text-white' : 'text-slate-700'}`}
-                  aria-pressed={manageInterval === 'monthly'}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setManageInterval('yearly')}
-                  className={`px-3 py-1.5 rounded-full ${manageInterval === 'yearly' ? 'bg-emerald-600 text-white' : 'text-slate-700'}`}
-                  aria-pressed={manageInterval === 'yearly'}
-                >
-                  Yearly
-                </button>
-              </div>
-              
-              <div className="grid gap-4 md:grid-cols-2">
-                {plans.map((plan) => {
-                  const Icon = plan.icon;
-                  const isCurrent = subscription?.plan === plan.id;
-                  
-                  return (
-                    <div
-                      key={plan.id}
-                      className={`rounded-xl border-2 p-4 ${
-                        isCurrent
-                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 dark:border-emerald-400'
-                          : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-400'
-                      }`}
-                    >
-                      <div className="mb-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Icon className={`h-5 w-5 ${isCurrent ? 'text-emerald-600' : 'text-slate-600'}`} />
-                          <h4 className="font-semibold text-slate-900 dark:text-slate-100">{plan.name}</h4>
-                        </div>
-                        {isCurrent && (
-                          <span className="rounded-full bg-emerald-600 px-2 py-1 text-xs font-bold text-white">
-                            Current
-                          </span>
-                        )}
-                      </div>
-                      <p className="mb-3 text-2xl font-bold text-slate-900 dark:text-white">₹{manageInterval === 'yearly' ? (plan.id === 'advance' ? 19999 : 14999) : plan.price}/{manageInterval === 'yearly' ? 'yr' : 'mo'}</p>
-                      <ul className="mb-4 space-y-1 text-sm text-slate-600 dark:text-slate-400">
-                        {plan.features.slice(0, 3).map((feature, idx) => (
-                          <li key={idx} className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-emerald-600" />
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
-                      {!isCurrent && (
-                        <button
-                          onClick={() => {
-                            if (!currentPassword) {
-                              setActionError('Please enter your password below first');
-                            } else {
-                              handleChangePlan(plan.id as 'basic' | 'advance');
-                            }
-                          }}
-                          disabled={actionLoading}
-                          className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
-                        >
-                          {actionLoading ? 'Processing...' : 'Switch to ' + plan.name}
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Change Plan</h3>
             </div>
-
-            <div className="mb-4">
-              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Enter your password to confirm plan change
-              </label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => {
-                  setCurrentPassword(e.target.value);
-                  setActionError('');
-                }}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                placeholder="Your current password"
-              />
-            </div>
-
-            <div className="flex justify-end gap-3">
+            <p className="text-sm text-slate-700 dark:text-slate-300">
+              To switch to <span className="font-semibold capitalize">{changePlanNotice.plan === 'advance' ? 'Professional' : 'Essential'}</span>
+              {' '}({changePlanNotice.interval}), please cancel your ongoing subscription first.
+              You can schedule cancellation at the end of the current billing period to avoid double charges.
+            </p>
+            <div className="mt-5 flex justify-end gap-3">
               <button
-                onClick={() => {
-                  setShowManageModal(false);
-                  setCurrentPassword('');
-                  setActionError('');
-                }}
-                disabled={actionLoading}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                onClick={() => setChangePlanNotice(null)}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 Close
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Cancel Subscription Modal */}
-      {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="rounded-full bg-red-100 p-3">
-                <AlertCircle className="h-6 w-6 text-red-600" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Cancel Subscription</h3>
-            </div>
-
-            {actionError && (
-              <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
-                {actionError}
-              </div>
-            )}
-
-            <p className="mb-4 text-slate-600 dark:text-slate-400">
-              {cancelAtPeriodEnd
-                ? 'Cancel at period end selected: You will retain access until the end of the current billing period.'
-                : 'You will lose access to premium features immediately after cancelling.'}
-            </p>
-
-            <div className="mb-4">
-              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Cancellation Options</label>
-              <div className="mb-4 flex items-center gap-2">
-                <input
-                  id="cancelAtEnd"
-                  type="checkbox"
-                  checked={cancelAtPeriodEnd}
-                  onChange={(e) => setCancelAtPeriodEnd(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
-                />
-                <label htmlFor="cancelAtEnd" className="text-sm text-slate-700 dark:text-slate-300">
-                  Cancel at the end of the current billing period (recommended)
-                </label>
-              </div>
-              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Enter your password to confirm cancellation
-              </label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => {
-                  setCurrentPassword(e.target.value);
-                  setActionError('');
-                }}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                placeholder="Your current password"
-                autoFocus
-              />
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:flex sm:justify-end">
               <button
-                onClick={() => {
-                  setShowCancelModal(false);
-                  setCurrentPassword('');
-                  setActionError('');
-                }}
-                disabled={actionLoading}
-                className="w-full sm:w-auto rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                onClick={() => router.push('/dashboard/subscription/cancel')}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
               >
-                Keep Subscription
-              </button>
-              <button
-                onClick={handleCancelSubscription}
-                disabled={actionLoading || !currentPassword}
-                className="w-full sm:w-auto rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                {actionLoading ? 'Cancelling...' : 'Yes, Cancel'}
+                Go to Cancel Page
               </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }

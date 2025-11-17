@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
 type Status = 'none' | 'trialing' | 'active' | 'cancelled' | 'past_due' | 'incomplete' | 'halted' | 'pending';
@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export default function ManageSubscriptionPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -19,9 +20,6 @@ export default function ManageSubscriptionPage() {
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState<boolean>(true);
-  const [canceling, setCanceling] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState<string>("");
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -43,85 +41,7 @@ export default function ManageSubscriptionPage() {
       .finally(() => setLoading(false));
   }, [router, authLoading, user?.role]);
 
-  const cancelNow = async () => {
-    if (!currentPassword) {
-      setError('Please enter your current password to cancel subscription');
-      return;
-    }
-    
-    try {
-      setCanceling(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/billing/cancel', { 
-        method: 'POST', 
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
-        },
-        body: JSON.stringify({ currentPassword, atPeriodEnd: cancelAtPeriodEnd })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to cancel');
-      setShowPasswordPrompt(null);
-      setCurrentPassword('');
-      // Refresh status
-      router.refresh();
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setCanceling(false);
-    }
-  };
-
-  const changePlan = (targetPlan: 'basic' | 'advance') => {
-    // Check if this is an existing subscription change that requires password
-    if (status === 'active' || status === 'trialing') {
-      setShowPasswordPrompt(`change-${targetPlan}`);
-    } else {
-      // New subscription, no password needed
-      router.push(`/billing/subscribe?plan=${targetPlan}&interval=${interval}`);
-    }
-  };
-  
-  const confirmPlanChange = async () => {
-    if (!currentPassword || !showPasswordPrompt?.startsWith('change-')) {
-      setError('Please enter your current password to change plans');
-      return;
-    }
-    
-    const targetPlan = showPasswordPrompt.replace('change-', '') as 'basic' | 'advance';
-    
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/billing/subscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          plan: targetPlan,
-          interval,
-          currentPassword 
-        })
-      });
-      
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to change plan');
-      
-      // Redirect to checkout or show success
-      if (data.checkout) {
-        // Handle Razorpay checkout flow
-        window.location.href = `/billing/checkout?subscriptionId=${data.subscriptionId}`;
-      } else {
-        setShowPasswordPrompt(null);
-        setCurrentPassword('');
-        router.refresh();
-      }
-    } catch (e: any) {
-      setError(e.message);
-    }
-  };
+  // Plan changes are disabled per requirements. Only cancellation is available via dedicated page.
 
   const blocked = user?.accountRole !== 'owner';
 
@@ -149,6 +69,11 @@ export default function ManageSubscriptionPage() {
         </div>
       )}
       <div className="container mx-auto px-4 py-8">
+        {searchParams.get('cancel') === 'success' && (
+          <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-900/20 dark:text-emerald-300">
+            Subscription cancellation received. {cancelAtPeriodEnd ? 'You will retain access until the end of your current billing period.' : 'Access to premium features has been removed immediately.'}
+          </div>
+        )}
         <div className="mb-6">
           <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100">Manage Subscription</h1>
           <p className="text-sm text-slate-600 dark:text-slate-400">Switch plans, check billing cycle, or cancel</p>
@@ -175,17 +100,10 @@ export default function ManageSubscriptionPage() {
             )}
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                onClick={() => changePlan(plan === 'basic' ? 'advance' : 'basic')}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700"
-              >
-                {plan === 'basic' ? 'Upgrade to Professional' : 'Downgrade to Essential'}
-              </button>
               {(status === 'active' || status === 'trialing') && (
                 <button
-                  onClick={() => setShowPasswordPrompt('cancel')}
-                  disabled={canceling}
-                  className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-bold text-red-700 hover:bg-red-50 disabled:opacity-60 dark:border-red-700 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                  onClick={() => router.push('/dashboard/subscription/cancel')}
+                  className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-bold text-red-700 hover:bg-red-50 dark:border-red-700 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-red-900/20"
                 >
                   Cancel Subscription
                 </button>
@@ -193,110 +111,10 @@ export default function ManageSubscriptionPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Plans</h2>
-            {/* Interval Toggle */}
-            <div className="mb-4 inline-flex rounded-full bg-slate-100 p-1 text-xs font-semibold" role="tablist" aria-label="Billing Interval">
-              <button
-                onClick={() => setInterval('monthly')}
-                className={`px-3 py-1.5 rounded-full ${interval === 'monthly' ? 'bg-emerald-600 text-white' : 'text-slate-700'}`}
-                aria-pressed={interval === 'monthly'}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setInterval('yearly')}
-                className={`px-3 py-1.5 rounded-full ${interval === 'yearly' ? 'bg-emerald-600 text-white' : 'text-slate-700'}`}
-                aria-pressed={interval === 'yearly'}
-              >
-                Yearly
-              </button>
-            </div>
-            <div className="grid gap-4">
-              <div className={`rounded-xl border p-4 ${plan === 'basic' ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200'}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-slate-900 dark:text-slate-100">Essential</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">₹{interval === 'yearly' ? '14,999 / year' : '1,499 / month'}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Perfect for single restaurant</p>
-                  </div>
-                  <button onClick={() => changePlan('basic')} className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50">Select</button>
-                </div>
-              </div>
-              <div className={`rounded-xl border p-4 ${plan === 'advance' ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200'}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-slate-900 dark:text-slate-100">Professional</p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">₹{interval === 'yearly' ? '19,999 / year' : '1,999 / month'}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">For growing restaurants</p>
-                  </div>
-                  <button onClick={() => changePlan('advance')} className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50">Select</button>
-                </div>
-              </div>
-            </div>
-            <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">Note: Switching plans will open the checkout flow. Existing subscriptions may be cancelled and recreated depending on provider constraints.</p>
-          </div>
+          {/* Plans management removed per requirements */}
         </div>
 
-        {/* Password Confirmation Modal */}
-        {showPasswordPrompt && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
-                {showPasswordPrompt === 'cancel' ? 'Cancel Subscription' : 'Change Plan'}
-              </h3>
-              <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
-                {showPasswordPrompt === 'cancel' 
-                  ? 'Choose when to cancel, then enter your password to confirm.' 
-                  : 'Please enter your current password to confirm this sensitive operation.'}
-              </p>
-              {showPasswordPrompt === 'cancel' && (
-                <div className="mb-4 flex items-center gap-2">
-                  <input
-                    id="cancelAtEndModal"
-                    type="checkbox"
-                    checked={cancelAtPeriodEnd}
-                    onChange={(e) => setCancelAtPeriodEnd(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <label htmlFor="cancelAtEndModal" className="text-sm text-slate-700 dark:text-slate-300">
-                    Cancel at the end of the current billing period (recommended)
-                  </label>
-                </div>
-              )}
-              <div className="mb-4">
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Current Password</label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                  placeholder="Enter your current password"
-                  autoFocus
-                />
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => {
-                    setShowPasswordPrompt(null);
-                    setCurrentPassword('');
-                    setError('');
-                  }}
-                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={showPasswordPrompt === 'cancel' ? cancelNow : confirmPlanChange}
-                  disabled={!currentPassword || canceling}
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
-                >
-                  {canceling ? 'Processing...' : 'Confirm'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Password modal removed; cancellation handled on dedicated page */}
       </div>
     </div>
   );

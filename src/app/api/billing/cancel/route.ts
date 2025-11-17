@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import { getUserFromRequest, verifyUserPassword } from '@/lib/auth';
 import Subscription from '@/models/Subscription';
+import CancellationFeedback from '@/models/CancellationFeedback';
 import { getRazorpay } from '@/lib/razorpay';
 import { resolveAccountOwnerPrivilege } from '@/lib/ownership';
 
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
     
     const body = await request.json();
-    const { currentPassword, atPeriodEnd } = body || {};
+    const { currentPassword, atPeriodEnd, reason, details } = body || {};
     
     if (!currentPassword) {
       return NextResponse.json({ error: 'Current password required to cancel subscription' }, { status: 400 });
@@ -44,6 +45,21 @@ export async function POST(request: NextRequest) {
       cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
       currentPeriodEnd: sub.currentPeriodEnd
     });
+
+    // Persist cancellation feedback (non-blocking if it fails)
+    try {
+      await CancellationFeedback.create({
+        ownerId,
+        subscriptionId: sub._id,
+        plan: sub.plan,
+        interval: sub.interval,
+        atPeriodEnd: Boolean(atPeriodEnd),
+        reason: typeof reason === 'string' && reason.trim() ? reason.trim() : 'unspecified',
+        details: typeof details === 'string' && details.trim() ? details.trim().slice(0, 2000) : undefined,
+      });
+    } catch (e) {
+      console.warn('Failed to save cancellation feedback', e);
+    }
 
     // Handle trial subscriptions separately - Razorpay doesn't allow canceling trials
     if (sub.status === 'trialing') {

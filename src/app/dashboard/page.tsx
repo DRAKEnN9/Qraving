@@ -22,6 +22,8 @@ import {
 import { useSocket } from '@/contexts/SocketContext';
 import { formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
+import { useSubscriptionAccess } from '@/hooks/useSubscriptionAccess';
+import PremiumFeatureGuard from '@/components/PremiumFeatureGuard';
 
 interface Order {
   _id: string;
@@ -44,7 +46,11 @@ export const dynamic = 'force-dynamic';
 export default function DashboardPage() {
   const router = useRouter();
   const { socket, isConnected, joinRestaurant } = useSocket();
+  const { plan } = useSubscriptionAccess();
   const [loading, setLoading] = useState(true);
+  
+  // Check if user has basic plan (locked features) or advance plan (all features)
+  const isBasicPlan = plan === 'basic';
   const [restaurantId, setRestaurantId] = useState<string>('');
   const [currency, setCurrency] = useState<string>('INR');
   const [stats, setStats] = useState({
@@ -469,43 +475,75 @@ export default function DashboardPage() {
 
         {/* Right Column - Top Items & Quick Actions */}
         <div className="space-y-6">
-          {/* Top Selling Items */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
-              Top Selling
-            </h2>
-            {topItems.length === 0 ? (
-              <p className="text-center text-sm text-slate-500 dark:text-slate-400">
-                No orders yet
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {topItems.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold ${
-                          index === 0
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : index === 1
-                              ? 'bg-gray-100 text-gray-700'
-                              : 'bg-teal-100 text-teal-700'
-                        }`}
-                      >
-                        {index + 1}
+          {/* Top Selling Items - Premium Feature for Advance Plan */}
+          {!isBasicPlan ? (
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
+                Top Selling
+              </h2>
+              {topItems.length === 0 ? (
+                <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+                  No orders yet
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {topItems.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold ${
+                            index === 0
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : index === 1
+                                ? 'bg-gray-100 text-gray-700'
+                                : 'bg-teal-100 text-teal-700'
+                          }`}
+                        >
+                          {index + 1}
+                        </div>
+                        <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                          {item.name}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {item.name}
+                      <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                        {item.count}
                       </span>
                     </div>
-                    <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                      {item.count}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <PremiumFeatureGuard
+              isLocked={true}
+              featureName="Top Selling Items"
+              description="See which menu items are most popular with your customers"
+              className="rounded-xl"
+            >
+              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  Top Selling
+                </h2>
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map((index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-sm font-bold text-gray-700">
+                          {index}
+                        </div>
+                        <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                          Menu Item #{index}
+                        </span>
+                      </div>
+                      <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                        {Math.floor(Math.random() * 50) + 10}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
-          </div>
+            </PremiumFeatureGuard>
+          )}
 
           {/* Quick Actions */}
           <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 dark:border-emerald-900/30 dark:from-emerald-900/20 dark:to-teal-900/20">

@@ -5,6 +5,7 @@ import User from '@/models/User';
 import Restaurant from '@/models/Restaurant';
 import Order from '@/models/Order';
 import Subscription from '@/models/Subscription';
+import { getRazorpay } from '@/lib/razorpay';
 import AccountMember from '@/models/AccountMember';
 
 export const dynamic = 'force-dynamic';
@@ -38,7 +39,22 @@ export async function DELETE(request: NextRequest) {
       await Restaurant.deleteMany({ _id: { $in: restaurantIds } });
     }
 
-    // Delete subscription and members
+    // Best-effort: cancel remote subscription before deleting
+    try {
+      const sub = await Subscription.findOne({ ownerId: auth.userId });
+      if (sub?.razorpaySubscriptionId) {
+        try {
+          const rz = getRazorpay();
+          await rz.subscriptions.cancel(sub.razorpaySubscriptionId, { cancel_at_cycle_end: 0 } as any);
+        } catch (e) {
+          console.warn('Failed to cancel Razorpay subscription during account delete:', e);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to lookup subscription for account delete:', e);
+    }
+
+    // Delete subscription and members (local cleanup)
     await Subscription.deleteOne({ ownerId: auth.userId });
     await AccountMember.deleteMany({ ownerId: auth.userId });
 

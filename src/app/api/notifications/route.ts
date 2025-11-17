@@ -42,10 +42,10 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      if (subscriptionAccess.status === 'cancelled' && subscriptionAccess.cancelAtPeriodEnd && subscriptionAccess.currentPeriodEnd) {
+      // Show scheduled-cancellation notice whenever a cancellation at period end is set
+      if (subscriptionAccess.cancelAtPeriodEnd && subscriptionAccess.currentPeriodEnd) {
         const periodEndDate = new Date(subscriptionAccess.currentPeriodEnd);
         const daysLeft = Math.ceil((periodEndDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-        
         if (daysLeft > 0) {
           notifications.push({
             id: 'subscription-ending',
@@ -59,6 +59,43 @@ export async function GET(request: NextRequest) {
             priority: 'high'
           });
         }
+      }
+
+      // Upcoming billing cycle reminder for active subscriptions
+      if (subscriptionAccess.status === 'active' && subscriptionAccess.currentPeriodEnd) {
+        const renewDate = new Date(subscriptionAccess.currentPeriodEnd);
+        const daysLeft = Math.ceil((renewDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 7 && daysLeft >= 0) {
+          notifications.push({
+            id: 'upcoming-billing',
+            type: daysLeft <= 3 ? 'warning' : 'info',
+            title: daysLeft === 0 ? 'Billing Today' : `Upcoming Billing ${daysLeft === 1 ? 'Tomorrow' : `in ${daysLeft} Days`}`,
+            message:
+              daysLeft === 0
+                ? 'Your subscription renews today. Please ensure sufficient funds are available to avoid payment failure.'
+                : `Your subscription will renew ${daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`}. Ensure sufficient funds are available before the due date to avoid payment failure.`,
+            createdAt: new Date(),
+            read: false,
+            actionUrl: '/dashboard/billing',
+            actionText: 'View Billing',
+            priority: daysLeft <= 3 ? 'high' : 'medium'
+          });
+        }
+      }
+
+      // Immediate cancellation (no access retained)
+      if (subscriptionAccess.status === 'cancelled' && !subscriptionAccess.cancelAtPeriodEnd) {
+        notifications.push({
+          id: 'subscription-cancelled',
+          type: 'error',
+          title: 'Subscription Cancelled',
+          message: 'Your subscription has been cancelled. You no longer have access to premium features.',
+          createdAt: new Date(),
+          read: false,
+          actionUrl: '/dashboard/billing',
+          actionText: 'View Plans',
+          priority: 'high'
+        });
       }
 
       if (subscriptionAccess.status === 'past_due') {

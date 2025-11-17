@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, Plus, Bell, LogOut, FolderPlus, UtensilsCrossed, Menu, X, ChevronDown } from 'lucide-react';
+import { Search, Bell, LogOut, Menu, X } from 'lucide-react';
 
 interface TopbarProps {
   user?: {
@@ -18,7 +18,7 @@ function TopbarContent({ user, onLogout, sidebarCollapsed, onOpenMobileSidebar }
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
-  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  // Quick actions removed per requirements
 
   // Keep Topbar search in sync with URL (?search=...)
   useEffect(() => {
@@ -93,49 +93,9 @@ function TopbarContent({ user, onLogout, sidebarCollapsed, onOpenMobileSidebar }
           </form>
         </div>
 
-        {/* Right side - Quick Actions & Logout */}
+        {/* Right side - Notifications & Logout */}
         <div className="flex items-center gap-2 lg:gap-3">
-          {/* Quick Actions Dropdown */}
-          <div className="relative hidden sm:block">
-            <button
-              onClick={() => setQuickActionsOpen(!quickActionsOpen)}
-              onBlur={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                  setTimeout(() => setQuickActionsOpen(false), 200);
-                }
-              }}
-              className="flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 lg:px-4"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden lg:inline">New</span>
-              <ChevronDown className="h-4 w-4" />
-            </button>
-
-            {quickActionsOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                <button
-                  onClick={() => {
-                    router.push('/dashboard/menu-builder');
-                    setQuickActionsOpen(false);
-                  }}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                >
-                  <FolderPlus className="h-4 w-4 text-emerald-600" />
-                  New Category
-                </button>
-                <button
-                  onClick={() => {
-                    router.push('/dashboard/menu-builder');
-                    setQuickActionsOpen(false);
-                  }}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                >
-                  <UtensilsCrossed className="h-4 w-4 text-emerald-600" />
-                  New Menu Item
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Quick Actions removed */}
 
           {/* Notifications */}
           <button

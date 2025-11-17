@@ -18,6 +18,8 @@ import {
   Plus,
   AlertCircle,
 } from 'lucide-react';
+import { useSubscriptionAccess } from '@/hooks/useSubscriptionAccess';
+import PremiumFeatureGuard from '@/components/PremiumFeatureGuard';
 
 interface Analytics {
   period: {
@@ -61,12 +63,16 @@ export const dynamic = 'force-dynamic';
 
 export default function AnalyticsPage() {
   const router = useRouter();
+  const { plan, loading: subLoading } = useSubscriptionAccess();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [restaurantId, setRestaurantId] = useState<string>('');
   const [period, setPeriod] = useState<7 | 30 | 90>(30);
   const [currency, setCurrency] = useState<string>('INR');
+  
+  // Check if user has basic plan (locked) or advance plan (unlocked)
+  const isLocked = plan === 'basic';
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -331,6 +337,12 @@ export default function AnalyticsPage() {
   const completedChange = calculateChange(completedNow, completedPrev);
 
   return (
+    <PremiumFeatureGuard
+      isLocked={isLocked}
+      featureName="Analytics Dashboard"
+      description="Get deep insights into your restaurant's performance with detailed analytics"
+      className="min-h-screen"
+    >
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Header */}
       <div className="border-b border-slate-200 bg-white/90 backdrop-blur-md shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
@@ -693,5 +705,6 @@ export default function AnalyticsPage() {
         )}
       </div>
     </div>
+    </PremiumFeatureGuard>
   );
 }

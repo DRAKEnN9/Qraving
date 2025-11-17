@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Upload, MapPin, Users, Hash, Store } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 export const dynamic = 'force-dynamic';
 
 export default function NewRestaurantPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -48,6 +50,13 @@ export default function NewRestaurantPage() {
       } catch {}
     })();
   }, [router]);
+
+  // Prefill primary email from authenticated user (still editable)
+  useEffect(() => {
+    if (user?.email && !formData.primaryEmail) {
+      setFormData((prev) => ({ ...prev, primaryEmail: user.email }));
+    }
+  }, [user, formData.primaryEmail]);
 
   // Auto-generate slug from name
   const generateSlug = (name: string) => {
@@ -398,7 +407,7 @@ export default function NewRestaurantPage() {
                       setFormData((prev) => ({ ...prev, primaryEmail: e.target.value }))
                     }
                     className={`mt-1 w-full rounded-lg border bg-white px-3 py-2 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:text-slate-100 ${errors.primaryEmail ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-slate-600'}`}
-                    placeholder="owner@example.com"
+                    placeholder={user?.email || 'owner@example.com'}
                   />
                   {errors.primaryEmail && (
                     <p className="mt-1 text-sm text-red-600">{errors.primaryEmail}</p>
