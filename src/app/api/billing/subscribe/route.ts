@@ -30,21 +30,26 @@ export async function POST(request: NextRequest) {
     const email: string | undefined = body.email;
     const currentPassword: string | undefined = body.currentPassword;
     const skipTrial: boolean = body.skipTrial || false; // Allow forcing paid subscription
-    
+
     // Check if account has existing subscription to determine if password is needed
     const existingSub = await Subscription.findOne({ ownerId });
-    if (existingSub && (existingSub.status === 'active' || existingSub.status === 'trialing')) {
+    const requirePassword = !!existingSub && existingSub.status === 'active';
+    if (requirePassword) {
       if (!currentPassword) {
-        return NextResponse.json({ error: 'Current password required to change subscription plan' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'Current password required to change subscription plan' },
+          { status: 400 }
+        );
       }
-      
+
       const isValidPassword = await verifyUserPassword(user.userId, currentPassword);
       if (!isValidPassword) {
         return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 });
       }
     }
 
-    const planId = plan === 'advance' ? RAZORPAY_PLANS.advance[interval] : RAZORPAY_PLANS.basic[interval];
+    const planId =
+      plan === 'advance' ? RAZORPAY_PLANS.advance[interval] : RAZORPAY_PLANS.basic[interval];
 
     // Check trial eligibility
     const trialEligibility = await checkTrialEligibility(user);
@@ -55,7 +60,7 @@ export async function POST(request: NextRequest) {
       isEligible: trialEligibility.isEligible,
       reason: trialEligibility.reason,
       shouldStartTrial,
-      skipTrial
+      skipTrial,
     });
 
     let trialEndsAt: Date | undefined;
@@ -99,7 +104,7 @@ export async function POST(request: NextRequest) {
     if (shouldStartTrial) {
       console.log(`Marking trial as used for owner: ${ownerId}`);
       await markTrialAsUsed(ownerId);
-      
+
       // Verify the update worked
       const updatedSub = await Subscription.findOne({ ownerId });
       console.log(`Verification - hasUsedTrial is now: ${updatedSub?.hasUsedTrial}`);
@@ -107,10 +112,22 @@ export async function POST(request: NextRequest) {
 
     const razorpay = getRazorpay();
 
+    // Determine a safe total_count so end_time does not exceed Razorpay's limit (~year 2120)
+    const MAX_END_YEAR = 2120;
+    const startAtSeconds =
+      shouldStartTrial && startAtEpoch ? startAtEpoch : Math.floor(Date.now() / 1000);
+    const startYear = new Date(startAtSeconds * 1000).getUTCFullYear();
+    let safeTotalCount = 100;
+    if (interval === 'yearly') {
+      const maxYears = Math.min(100, Math.max(1, MAX_END_YEAR - startYear));
+      // UPI mandates expire_at <= 30 years; cap yearly cycles to 30
+      safeTotalCount = Math.min(maxYears, 30);
+    }
+
     // Create subscription on Razorpay with autopay enabled
     const createPayload: any = {
       plan_id: planId,
-      total_count: 120, // Allow long-running subscriptions (10 years)
+      total_count: safeTotalCount, // capped to avoid exceeding Razorpay max end time
       customer_notify: 1, // Notify customer via email/SMS
       quantity: 1,
       addons: [],
@@ -120,7 +137,7 @@ export async function POST(request: NextRequest) {
         interval,
       },
     };
-    
+
     // Only include notify_info if we have email or contact to avoid Razorpay errors
     if (email || contact) {
       createPayload.notify_info = {};
@@ -132,15 +149,25 @@ export async function POST(request: NextRequest) {
       createPayload.start_at = startAtEpoch;
     }
 
-    console.log('Creating Razorpay subscription with payload:', JSON.stringify(createPayload, null, 2));
-    
+    console.log(
+      'Creating Razorpay subscription with payload:',
+      JSON.stringify(createPayload, null, 2)
+    );
+
     let subscription: any;
     try {
       subscription = await razorpay.subscriptions.create(createPayload as any);
-      console.log('Razorpay subscription created:', subscription.id, 'status:', subscription.status);
+      console.log(
+        'Razorpay subscription created:',
+        subscription.id,
+        'status:',
+        subscription.status
+      );
     } catch (razorpayError: any) {
       console.error('Razorpay subscription creation failed:', razorpayError);
-      throw new Error(`Razorpay error: ${razorpayError.error?.description || razorpayError.message}`);
+      throw new Error(
+        `Razorpay error: ${razorpayError.error?.description || razorpayError.message}`
+      );
     }
 
     // Update DB with subscription id
@@ -159,7 +186,7 @@ export async function POST(request: NextRequest) {
       trialEligibility: {
         isEligible: trialEligibility.isEligible,
         reason: trialEligibility.reason,
-        message: trialEligibility.message
+        message: trialEligibility.message,
       },
       checkout: {
         // For Razorpay Checkout subscription flow
