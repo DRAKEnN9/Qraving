@@ -90,9 +90,13 @@ function SortableCategory({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+    >
       {/* Category Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800">
+      <div className="flex flex-col gap-2 border-b border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <button
             {...attributes}
@@ -103,7 +107,9 @@ function SortableCategory({
             <GripVertical className="h-5 w-5" />
           </button>
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{category.name}</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              {category.name}
+            </h3>
             {category.description && (
               <p className="text-sm text-slate-600 dark:text-slate-400">{category.description}</p>
             )}
@@ -152,7 +158,7 @@ function SortableCategory({
               .map((item) => (
                 <div
                   key={item._id}
-                  className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 rounded-lg border border-slate-200 p-3 transition-all hover:shadow-md hover:border-emerald-200 dark:border-slate-800 dark:bg-slate-900"
+                  className="flex flex-col items-start gap-3 rounded-lg border border-slate-200 p-3 transition-all hover:border-emerald-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:gap-4"
                 >
                   {/* Item Image */}
                   <div className="h-16 w-16 flex-shrink-0">
@@ -169,15 +175,21 @@ function SortableCategory({
                     )}
                   </div>
 
-                  <div className="flex-1 w-full">
+                  <div className="w-full flex-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-medium text-slate-900 dark:text-slate-100">{item.name}</h4>
+                      <h4 className="font-medium text-slate-900 dark:text-slate-100">
+                        {item.name}
+                      </h4>
                       {item.isVegetarian && (
-                        <span className="text-green-600" title="Vegetarian">🌱</span>
+                        <span className="text-green-600" title="Vegetarian">
+                          🌱
+                        </span>
                       )}
                     </div>
                     {item.description && (
-                      <p className="line-clamp-1 text-sm text-slate-600 sm:mt-2 dark:text-slate-400">{item.description}</p>
+                      <p className="line-clamp-1 text-sm text-slate-600 dark:text-slate-400 sm:mt-2">
+                        {item.description}
+                      </p>
                     )}
                     <div className="mt-1 flex items-center gap-2 sm:flex-col sm:items-start sm:gap-2">
                       <span className="font-semibold text-emerald-600">
@@ -191,46 +203,46 @@ function SortableCategory({
                     </div>
                   </div>
 
-                      {/* Item Status & Actions */}
-                      <div className="flex items-center gap-2">
-                        {item.soldOut && (
-                          <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-600">
-                            Sold Out
-                          </span>
-                        )}
-                        {!item.orderable && (
-                          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                            Hidden
-                          </span>
-                        )}
+                  {/* Item Status & Actions */}
+                  <div className="flex items-center gap-2">
+                    {item.soldOut && (
+                      <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-600">
+                        Sold Out
+                      </span>
+                    )}
+                    {!item.orderable && (
+                      <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        Hidden
+                      </span>
+                    )}
 
-                        <button
-                          onClick={() => onToggleSoldOut(item, category._id)}
-                          className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
-                            item.soldOut
-                              ? 'border border-emerald-300 text-emerald-700 hover:bg-emerald-50'
-                              : 'border border-red-300 text-red-700 hover:bg-red-50'
-                          }`}
-                          title={item.soldOut ? 'Mark as available' : 'Mark as sold out'}
-                        >
-                          {item.soldOut ? 'Mark Available' : 'Mark Sold Out'}
-                        </button>
+                    <button
+                      onClick={() => onToggleSoldOut(item, category._id)}
+                      className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
+                        item.soldOut
+                          ? 'border border-emerald-300 text-emerald-700 hover:bg-emerald-50'
+                          : 'border border-red-300 text-red-700 hover:bg-red-50'
+                      }`}
+                      title={item.soldOut ? 'Mark as available' : 'Mark as sold out'}
+                    >
+                      {item.soldOut ? 'Mark Available' : 'Mark Sold Out'}
+                    </button>
 
-                        <button
-                          onClick={() => onEditItem(item, category._id)}
-                          className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
-                          title="Edit item"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => onDeleteItem(item._id, category._id)}
-                          className="rounded p-1.5 text-slate-400 hover:bg-red-100 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-900/20"
-                          title="Delete item"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                    <button
+                      onClick={() => onEditItem(item, category._id)}
+                      className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                      title="Edit item"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => onDeleteItem(item._id, category._id)}
+                      className="rounded p-1.5 text-slate-400 hover:bg-red-100 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-900/20"
+                      title="Delete item"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
 
@@ -260,6 +272,16 @@ export default function MenuBuilderPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importResult, setImportResult] = useState<{
+    createdCount: number;
+    totalRows: number;
+    errors: string[];
+    missingImages: string[];
+  } | null>(null);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [zipFile, setZipFile] = useState<File | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -284,7 +306,7 @@ export default function MenuBuilderPage() {
   const fetchMenuData = async () => {
     try {
       const token = localStorage.getItem('token');
-      
+
       const [restaurantRes, categoriesRes, itemsRes] = await Promise.all([
         fetch('/api/owner/restaurant', {
           headers: { Authorization: `Bearer ${token}` },
@@ -323,6 +345,50 @@ export default function MenuBuilderPage() {
     } catch (err: any) {
       setError(err.message || 'Failed to load menu');
       setLoading(false);
+    }
+  };
+
+  const handleBulkImport = async () => {
+    if (!csvFile) {
+      setImportError('Please select a CSV file with your menu items.');
+      return;
+    }
+    try {
+      setImportError(null);
+      setImportResult(null);
+      setImporting(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('csv', csvFile);
+      if (zipFile) {
+        formData.append('imagesZip', zipFile);
+      }
+      const res = await fetch(`/api/owner/menu-items/import?restaurantId=${restaurantId}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || 'Import failed');
+      }
+      setImportResult({
+        createdCount: data.createdCount ?? 0,
+        totalRows: data.totalRows ?? 0,
+        errors: Array.isArray(data.errors) ? data.errors : [],
+        missingImages: Array.isArray(data.missingImages) ? data.missingImages : [],
+      });
+      await fetchMenuData();
+    } catch (e: any) {
+      setImportError(e.message || 'Import failed');
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -509,11 +575,13 @@ export default function MenuBuilderPage() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Menu Builder</h1>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                Menu Builder
+              </h1>
               <p className="text-slate-600 dark:text-slate-400">{restaurant.name}</p>
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:gap-3 w-full sm:w-auto">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:gap-3">
               <Link
                 href={`/menu/${restaurant.slug}`}
                 target="_blank"
@@ -536,13 +604,99 @@ export default function MenuBuilderPage() {
 
       {/* Content */}
       <div className="container mx-auto px-4 py-8">
+        <div className="mb-8 grid gap-4 lg:grid-cols-3">
+          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-2">
+            <h2 className="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
+              Bulk Import Menu Items
+            </h2>
+            <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+              Upload a CSV file with your items and an optional ZIP file with images. Images will be
+              matched by filename or item name.
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  CSV File
+                </label>
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setCsvFile(file);
+                  }}
+                  className="block w-full cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-700 hover:file:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:file:bg-slate-700 dark:file:text-slate-100"
+                />
+                {csvFile && (
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Selected: {csvFile.name}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Images ZIP (optional)
+                </label>
+                <input
+                  type="file"
+                  accept=".zip,application/zip,application/x-zip-compressed"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setZipFile(file);
+                  }}
+                  className="block w-full cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-700 hover:file:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:file:bg-slate-700 dark:file:text-slate-100"
+                />
+                {zipFile && (
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Selected: {zipFile.name}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={handleBulkImport}
+                disabled={importing || !csvFile}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {importing ? 'Importing...' : 'Import Items'}
+              </button>
+              {importError && (
+                <span className="text-xs text-red-600 dark:text-red-400">{importError}</span>
+              )}
+              {importResult && (
+                <span className="text-xs text-slate-600 dark:text-slate-400">
+                  Imported {importResult.createdCount} of {importResult.totalRows} rows.
+                  {importResult.errors.length > 0 &&
+                    ` ${importResult.errors.length} rows had errors.`}
+                </span>
+              )}
+            </div>
+            {importResult && importResult.errors.length > 0 && (
+              <div className="mt-3 max-h-40 overflow-y-auto rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-900/20 dark:text-red-200">
+                {importResult.errors.slice(0, 10).map((errMsg, idx) => (
+                  <div key={idx} className="mb-0.5">
+                    • {errMsg}
+                  </div>
+                ))}
+                {importResult.errors.length > 10 && (
+                  <div className="mt-1">…and {importResult.errors.length - 10} more.</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
         {categories.length === 0 ? (
           /* Empty State */
           <div className="flex flex-col items-center justify-center py-16">
             <div className="mb-6 rounded-full bg-emerald-100 p-6">
               <div className="text-4xl">🍽️</div>
             </div>
-            <h2 className="mb-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">Build Your Menu</h2>
+            <h2 className="mb-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+              Build Your Menu
+            </h2>
             <p className="mb-8 max-w-md text-center text-slate-600 dark:text-slate-400">
               Start by creating categories like "Appetizers", "Main Courses", etc. Then add
               delicious items to each category.
@@ -590,11 +744,15 @@ export default function MenuBuilderPage() {
         {/* Quick Stats */}
         {categories.length > 0 && (
           <div className="mt-12 grid gap-4 md:grid-cols-4">
-            <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Categories</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{categories.length}</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Categories
+                  </p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                    {categories.length}
+                  </p>
                 </div>
                 <div className="rounded-full bg-emerald-100 p-3">
                   <div className="text-xl">📂</div>
@@ -602,10 +760,12 @@ export default function MenuBuilderPage() {
               </div>
             </div>
 
-            <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Items</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Total Items
+                  </p>
                   <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                     {categories.reduce((sum, cat) => sum + (cat.items?.length || 0), 0)}
                   </p>
@@ -616,10 +776,12 @@ export default function MenuBuilderPage() {
               </div>
             </div>
 
-            <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Available Items</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Available Items
+                  </p>
                   <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                     {categories.reduce(
                       (sum, cat) =>
@@ -635,7 +797,7 @@ export default function MenuBuilderPage() {
               </div>
             </div>
 
-            <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Sold Out</p>
