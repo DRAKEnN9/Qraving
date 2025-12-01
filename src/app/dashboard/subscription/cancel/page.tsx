@@ -22,7 +22,7 @@ type Plan = 'basic' | 'advance';
 
 export default function CancelSubscriptionPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -117,7 +117,13 @@ export default function CancelSubscriptionPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to cancel subscription');
       setShowPassword(false);
       setPassword('');
-      router.push('/dashboard/subscription/manage?cancel=success');
+      if (!atPeriodEnd) {
+        // Immediate cancellation: end access right away and log out
+        logout();
+        return;
+      }
+      // Scheduled cancellation: keep access until period end
+      router.push('/dashboard/billing?cancel=success');
     } catch (e: any) {
       setError(e.message || 'Failed to cancel');
     } finally {

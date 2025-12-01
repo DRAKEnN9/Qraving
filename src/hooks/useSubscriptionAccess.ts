@@ -7,7 +7,15 @@ import { requiresSubscription } from '@/lib/subscription.shared';
 
 interface SubscriptionStatus {
   hasAccess: boolean;
-  status: 'none' | 'trialing' | 'active' | 'cancelled' | 'past_due' | 'incomplete' | 'halted' | 'pending';
+  status:
+    | 'none'
+    | 'trialing'
+    | 'active'
+    | 'cancelled'
+    | 'past_due'
+    | 'incomplete'
+    | 'halted'
+    | 'pending';
   plan?: 'basic' | 'advance';
   trialEndsAt?: string;
   currentPeriodEnd?: string;
@@ -19,7 +27,7 @@ export function useSubscriptionAccess(): SubscriptionStatus {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  
+
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
     hasAccess: false,
     status: 'none',
@@ -40,7 +48,7 @@ export function useSubscriptionAccess(): SubscriptionStatus {
       checkSubscription();
     } else {
       // No user but page doesn't require subscription
-      setSubscriptionStatus(prev => ({ ...prev, loading: false }));
+      setSubscriptionStatus((prev) => ({ ...prev, loading: false }));
     }
   }, [user, authLoading, pathname]);
 
@@ -66,13 +74,13 @@ export function useSubscriptionAccess(): SubscriptionStatus {
         return;
       }
 
-      const response = await fetch('/api/billing/status', {
+      const response = await fetch('/api/billing/status?refresh=true', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Match server-side logic exactly
         const now = new Date();
         let hasValidAccess = false;
@@ -89,8 +97,8 @@ export function useSubscriptionAccess(): SubscriptionStatus {
           // 2. The current period hasn't ended yet
           hasValidAccess = Boolean(
             data.cancelAtPeriodEnd === true &&
-            data.currentPeriodEnd &&
-            new Date(data.currentPeriodEnd) > now
+              data.currentPeriodEnd &&
+              new Date(data.currentPeriodEnd) > now
           );
         }
         // All other statuses have no access
@@ -100,7 +108,7 @@ export function useSubscriptionAccess(): SubscriptionStatus {
           cancelAtPeriodEnd: data.cancelAtPeriodEnd,
           currentPeriodEnd: data.currentPeriodEnd,
           hasValidAccess,
-          now: now.toISOString()
+          now: now.toISOString(),
         });
 
         setSubscriptionStatus({
@@ -115,7 +123,7 @@ export function useSubscriptionAccess(): SubscriptionStatus {
 
         // If page requires subscription but user doesn't have access, redirect
         if (requiresSubscription(pathname) && !hasValidAccess) {
-          router.push('/?subscription=expired');
+          router.push('/billing/subscribe?reason=expired');
         }
       } else {
         // API error - assume no access
@@ -124,9 +132,9 @@ export function useSubscriptionAccess(): SubscriptionStatus {
           status: 'none',
           loading: false,
         });
-        
+
         if (requiresSubscription(pathname)) {
-          router.push('/?subscription=error');
+          router.push('/billing/subscribe?reason=error');
         }
       }
     } catch (error) {
@@ -136,9 +144,9 @@ export function useSubscriptionAccess(): SubscriptionStatus {
         status: 'none',
         loading: false,
       });
-      
+
       if (requiresSubscription(pathname)) {
-        router.push('/?subscription=error');
+        router.push('/billing/subscribe?reason=error');
       }
     }
   };

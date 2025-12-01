@@ -46,7 +46,8 @@ export async function POST(request: NextRequest) {
   const payEntity = body?.payload?.payment?.entity;
   const invEntity = body?.payload?.invoice?.entity;
 
-  const razorpaySubscriptionId: string | undefined = subEntity?.id || payEntity?.subscription_id || invEntity?.subscription_id;
+  const razorpaySubscriptionId: string | undefined =
+    subEntity?.id || payEntity?.subscription_id || invEntity?.subscription_id;
   if (!razorpaySubscriptionId) {
     return NextResponse.json({ ok: true, note: 'No subscription id in payload' });
   }
@@ -73,6 +74,8 @@ export async function POST(request: NextRequest) {
         const currentStart = epochToDate(subEntity?.current_start ?? subEntity?.start_at);
         const currentEnd = epochToDate(subEntity?.current_end ?? subEntity?.charge_at);
         sub.status = 'active';
+        // Clear any prior trial marker once active
+        sub.trialEndsAt = undefined;
         if (currentStart) sub.currentPeriodStart = currentStart;
         if (currentEnd) sub.currentPeriodEnd = currentEnd;
         await sub.save();
@@ -103,6 +106,8 @@ export async function POST(request: NextRequest) {
       case 'subscription.completed': {
         // Subscription completed (one-time payment processed)
         sub.status = 'active';
+        // Clear prior trial marker on activation
+        sub.trialEndsAt = undefined;
         const currentStart = epochToDate(subEntity?.current_start ?? subEntity?.start_at);
         const currentEnd = epochToDate(subEntity?.current_end ?? subEntity?.charge_at);
         if (currentStart) sub.currentPeriodStart = currentStart;
@@ -115,21 +120,26 @@ export async function POST(request: NextRequest) {
         // Recurring payment processed successfully - update billing period
         // Clear any past_due status from previous failed attempts
         sub.status = 'active';
+        // Clear prior trial marker on charge
+        sub.trialEndsAt = undefined;
         const currentStart = epochToDate(subEntity?.current_start ?? subEntity?.start_at);
         const currentEnd = epochToDate(subEntity?.current_end ?? subEntity?.charge_at);
         if (currentStart) sub.currentPeriodStart = currentStart;
         if (currentEnd) sub.currentPeriodEnd = currentEnd;
         await sub.save();
-        console.log(`Subscription ${sub._id} charged successfully, period: ${currentStart?.toISOString()} - ${currentEnd?.toISOString()}`);
+        console.log(
+          `Subscription ${sub._id} charged successfully, period: ${currentStart?.toISOString()} - ${currentEnd?.toISOString()}`
+        );
 
         // Try to record the successful charge as a payment as well
         try {
           const filter: any = payEntity?.id
             ? { razorpayPaymentId: payEntity.id }
             : invEntity?.id
-            ? { razorpayInvoiceId: invEntity.id }
-            : { _id: undefined };
-          const paidAt = epochToDate(payEntity?.captured_at) || epochToDate(invEntity?.paid_at) || new Date();
+              ? { razorpayInvoiceId: invEntity.id }
+              : { _id: undefined };
+          const paidAt =
+            epochToDate(payEntity?.captured_at) || epochToDate(invEntity?.paid_at) || new Date();
           await Payment.findOneAndUpdate(
             filter,
             {
@@ -137,7 +147,12 @@ export async function POST(request: NextRequest) {
               subscriptionId: sub._id,
               razorpayPaymentId: payEntity?.id,
               razorpayInvoiceId: invEntity?.id || payEntity?.invoice_id,
-              amount: typeof payEntity?.amount === 'number' ? payEntity.amount : typeof invEntity?.amount_paid === 'number' ? invEntity.amount_paid : 0,
+              amount:
+                typeof payEntity?.amount === 'number'
+                  ? payEntity.amount
+                  : typeof invEntity?.amount_paid === 'number'
+                    ? invEntity.amount_paid
+                    : 0,
               currency: payEntity?.currency || invEntity?.currency || 'INR',
               status: 'captured',
               method: payEntity?.method,
@@ -158,8 +173,8 @@ export async function POST(request: NextRequest) {
           const filter: any = payEntity?.id
             ? { razorpayPaymentId: payEntity.id }
             : invEntity?.id
-            ? { razorpayInvoiceId: invEntity.id }
-            : { _id: undefined };
+              ? { razorpayInvoiceId: invEntity.id }
+              : { _id: undefined };
           await Payment.findOneAndUpdate(
             filter,
             {
@@ -167,13 +182,19 @@ export async function POST(request: NextRequest) {
               subscriptionId: sub._id,
               razorpayPaymentId: payEntity?.id,
               razorpayInvoiceId: invEntity?.id || payEntity?.invoice_id,
-              amount: typeof payEntity?.amount_refunded === 'number' && payEntity.amount_refunded > 0 ? payEntity.amount_refunded : typeof payEntity?.amount === 'number' ? payEntity.amount : 0,
+              amount:
+                typeof payEntity?.amount_refunded === 'number' && payEntity.amount_refunded > 0
+                  ? payEntity.amount_refunded
+                  : typeof payEntity?.amount === 'number'
+                    ? payEntity.amount
+                    : 0,
               currency: payEntity?.currency || invEntity?.currency || 'INR',
               status: 'refunded',
               method: payEntity?.method,
               description: invEntity?.description || payEntity?.description,
               invoiceUrl: invEntity?.short_url || invEntity?.invoice_url || invEntity?.receipt,
-              paidAt: epochToDate(payEntity?.captured_at) || epochToDate(invEntity?.paid_at) || undefined,
+              paidAt:
+                epochToDate(payEntity?.captured_at) || epochToDate(invEntity?.paid_at) || undefined,
             },
             { upsert: true, new: true, setDefaultsOnInsert: true }
           );
@@ -194,9 +215,10 @@ export async function POST(request: NextRequest) {
             const filter: any = payEntity?.id
               ? { razorpayPaymentId: payEntity.id }
               : invEntity?.id
-              ? { razorpayInvoiceId: invEntity.id }
-              : { _id: undefined }; // will not match anything if no ids
-            const paidAt = epochToDate(payEntity?.captured_at) || epochToDate(payEntity?.created_at);
+                ? { razorpayInvoiceId: invEntity.id }
+                : { _id: undefined }; // will not match anything if no ids
+            const paidAt =
+              epochToDate(payEntity?.captured_at) || epochToDate(payEntity?.created_at);
             await Payment.findOneAndUpdate(
               filter,
               {
@@ -204,7 +226,12 @@ export async function POST(request: NextRequest) {
                 subscriptionId: sub._id,
                 razorpayPaymentId: payEntity?.id,
                 razorpayInvoiceId: invEntity?.id || payEntity?.invoice_id,
-                amount: typeof payEntity?.amount === 'number' ? payEntity.amount : typeof invEntity?.amount_paid === 'number' ? invEntity.amount_paid : 0,
+                amount:
+                  typeof payEntity?.amount === 'number'
+                    ? payEntity.amount
+                    : typeof invEntity?.amount_paid === 'number'
+                      ? invEntity.amount_paid
+                      : 0,
                 currency: payEntity?.currency || invEntity?.currency || 'INR',
                 status: 'failed',
                 method: payEntity?.method,
@@ -223,34 +250,33 @@ export async function POST(request: NextRequest) {
       case 'invoice.paid':
       case 'payment.captured':
       case 'payment.authorized': {
-        // Payment successful - activate subscription immediately
-        if (sub.status === 'pending' || sub.status === 'incomplete') {
-          sub.status = 'active';
-          // Try to capture period end if present on invoice
-          const endEpoch = invEntity?.period_end ?? invEntity?.billing_end ?? undefined;
-          const startEpoch = invEntity?.period_start ?? invEntity?.billing_start ?? undefined;
-          const startDate = epochToDate(startEpoch);
-          const endDate = epochToDate(endEpoch);
-          if (startDate) sub.currentPeriodStart = startDate;
-          if (endDate) sub.currentPeriodEnd = endDate;
-          await sub.save();
-          console.log(`Payment successful - subscription ${sub._id} activated`);
-        }
+        // Payment successful - mark as active (regardless of prior transient status) and clear trial markers
+        sub.status = 'active';
+        sub.trialEndsAt = undefined;
+        // Try to capture period dates from invoice if present
+        const endEpoch = invEntity?.period_end ?? invEntity?.billing_end ?? undefined;
+        const startEpoch = invEntity?.period_start ?? invEntity?.billing_start ?? undefined;
+        const startDate = epochToDate(startEpoch);
+        const endDate = epochToDate(endEpoch);
+        if (startDate) sub.currentPeriodStart = startDate;
+        if (endDate) sub.currentPeriodEnd = endDate;
+        await sub.save();
+        console.log(`Payment successful - subscription ${sub._id} activated`);
 
         // Record/Upsert payment (authorized/captured/invoice.paid)
         try {
           const filter: any = payEntity?.id
             ? { razorpayPaymentId: payEntity.id }
             : invEntity?.id
-            ? { razorpayInvoiceId: invEntity.id }
-            : { _id: undefined }; // will not match anything if no ids
+              ? { razorpayInvoiceId: invEntity.id }
+              : { _id: undefined }; // will not match anything if no ids
           const statusMap: Record<string, 'authorized' | 'captured'> = {
             'payment.authorized': 'authorized',
             'payment.captured': 'captured',
             'invoice.paid': 'captured',
           };
           const status = statusMap[event] || 'captured';
-          const paidAt = 
+          const paidAt =
             epochToDate(payEntity?.captured_at) ||
             epochToDate(invEntity?.paid_at) ||
             (status === 'captured' ? new Date() : undefined);
@@ -262,7 +288,12 @@ export async function POST(request: NextRequest) {
               subscriptionId: sub._id,
               razorpayPaymentId: payEntity?.id,
               razorpayInvoiceId: invEntity?.id || payEntity?.invoice_id,
-              amount: typeof payEntity?.amount === 'number' ? payEntity.amount : typeof invEntity?.amount_paid === 'number' ? invEntity.amount_paid : 0,
+              amount:
+                typeof payEntity?.amount === 'number'
+                  ? payEntity.amount
+                  : typeof invEntity?.amount_paid === 'number'
+                    ? invEntity.amount_paid
+                    : 0,
               currency: payEntity?.currency || invEntity?.currency || 'INR',
               status,
               method: payEntity?.method,
