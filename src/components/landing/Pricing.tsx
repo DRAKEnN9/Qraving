@@ -6,8 +6,8 @@ import { useState } from 'react';
 export default function Pricing() {
   const [interval, setInterval] = useState<'monthly' | 'yearly'>('monthly');
   const isYearly = interval === 'yearly';
-  const basicPrice = isYearly ? 14999 : 1499;
-  const advancePrice = isYearly ? 19999 : 1999;
+  const basicPrice = isYearly ? 14990 : 1499;
+  const advancePrice = isYearly ? 19990 : 1999;
 
   const features = {
     basic: [
@@ -138,7 +138,7 @@ export default function Pricing() {
                 </div>
                 {isYearly && (
                   <p className="mt-2 text-sm font-semibold text-green-600">
-                    Equivalent to ₹1,250/month
+                    Equivalent to ₹1,249/month
                   </p>
                 )}
               </div>
@@ -194,7 +194,7 @@ export default function Pricing() {
                 </div>
                 {isYearly && (
                   <p className="mt-2 text-sm font-semibold text-orange-100">
-                    Equivalent to ₹1,667/month
+                    Equivalent to ₹1,666/month
                   </p>
                 )}
               </div>

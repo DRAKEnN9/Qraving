@@ -364,8 +364,8 @@ export default function BillingPage() {
                     ₹
                     {catalogInterval === 'yearly'
                       ? plan.id === 'advance'
-                        ? 19999
-                        : 14999
+                        ? 19990
+                        : 14990
                       : plan.price}
                   </span>
                   <span className="text-slate-600 dark:text-slate-400">
