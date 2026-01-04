@@ -50,7 +50,7 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative overflow-hidden bg-gradient-to-b from-white via-orange-50/20 to-white py-24 scroll-mt-24 md:scroll-mt-32"
+      className="relative scroll-mt-24 overflow-hidden bg-gradient-to-b from-white via-orange-50/20 to-white py-24 md:scroll-mt-32"
     >
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5" data-parallax="0.08" data-parallax-dir="up">
@@ -70,11 +70,17 @@ export default function HowItWorks() {
               🚀 SIMPLE WORKFLOW
             </span>
           </div>
-          <h2 className="reveal-on-scroll mb-6 text-4xl font-black text-gray-900 md:text-5xl lg:text-6xl" data-reveal-delay="150ms">
+          <h2
+            className="reveal-on-scroll mb-6 text-4xl font-black text-gray-900 md:text-5xl lg:text-6xl"
+            data-reveal-delay="150ms"
+          >
             How It Works in
             <span className="gradient-text"> 6 Simple Steps</span>
           </h2>
-          <p className="reveal-on-scroll mx-auto max-w-3xl text-xl text-gray-600" data-reveal-delay="250ms">
+          <p
+            className="reveal-on-scroll mx-auto max-w-3xl text-xl text-gray-600"
+            data-reveal-delay="250ms"
+          >
             From setup to serving customers - our platform makes restaurant management effortless
             and efficient.
           </p>
@@ -83,7 +89,11 @@ export default function HowItWorks() {
         {/* Timeline */}
         <div className="relative">
           {/* Vertical line */}
-          <div className="absolute left-1/2 top-0 h-full w-1 -translate-x-1/2 bg-gradient-to-b from-orange-500/20 via-red-500/20 to-amber-500/20" data-parallax="0.04" data-parallax-dir="up"></div>
+          <div
+            className="absolute left-1/2 top-0 h-full w-1 -translate-x-1/2 bg-gradient-to-b from-orange-500/20 via-red-500/20 to-amber-500/20"
+            data-parallax="0.04"
+            data-parallax-dir="up"
+          ></div>
 
           <div className="space-y-16">
             {steps.map((step, index) => {
@@ -117,44 +127,6 @@ export default function HowItWorks() {
                 </div>
               );
             })}
-          </div>
-        </div>
-
-        {/* Demo Video */}
-        <div
-          className="reveal-on-scroll mt-24 rounded-3xl border-2 border-orange-200 bg-gradient-to-br from-orange-50/50 to-red-50/50 p-8 shadow-xl backdrop-blur-sm"
-          data-reveal-delay="600ms"
-        >
-          <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
-            <div className="max-w-xl">
-              <h3 className="mb-4 text-3xl font-bold text-gray-900">
-                See It in Action:
-                <span className="gradient-text"> 2-Minute Demo</span>
-              </h3>
-              <p className="mb-6 text-lg text-gray-600">
-                Watch how restaurants use QR Menu Manager to streamline operations and boost sales.
-              </p>
-              <button className="group flex items-center gap-3 rounded-full bg-gradient-to-r from-orange-600 to-red-600 px-8 py-4 text-lg font-bold text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl">
-                <span>Play Video Demo</span>
-                <span className="text-2xl transition-transform group-hover:translate-x-1">→</span>
-              </button>
-            </div>
-            <div className="max-w-2xl flex-1">
-              <div className="aspect-video w-full overflow-hidden rounded-2xl border-4 border-white bg-gray-200 shadow-2xl">
-                {/* Video placeholder */}
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-orange-500/20 to-red-500/20">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-                    <svg className="h-10 w-10 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

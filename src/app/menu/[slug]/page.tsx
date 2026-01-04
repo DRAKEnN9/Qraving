@@ -141,7 +141,7 @@ function CustomerMenuPageContent() {
   // Real-time updates for menu items (e.g., soldOut toggles)
   useEffect(() => {
     if (!restaurant || !socket || !isConnected) return;
-    
+
     const handleMenuItemUpdated = (data: any) => {
       setCategories((prev) =>
         prev.map((cat) =>
@@ -218,12 +218,12 @@ function CustomerMenuPageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto max-w-6xl px-4 py-8">
-          <div className="mb-8 h-32 animate-pulse rounded-lg bg-gray-200"></div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="min-h-screen bg-[#F7FAFC]">
+        <div className="container mx-auto max-w-md px-4 py-8 sm:max-w-2xl lg:max-w-5xl">
+          <div className="mb-8 h-32 animate-pulse rounded-2xl bg-gray-200"></div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-64 animate-pulse rounded-lg bg-gray-200"></div>
+              <div key={i} className="h-40 animate-pulse rounded-2xl bg-gray-200"></div>
             ))}
           </div>
         </div>
@@ -233,7 +233,7 @@ function CustomerMenuPageContent() {
 
   if (error || !restaurant) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-[#F7FAFC]">
         <div className="mx-4 max-w-md rounded-lg bg-white p-8 text-center shadow-lg">
           <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-500" />
           <h2 className="mb-2 text-2xl font-bold text-gray-900">Restaurant Not Found</h2>
@@ -271,10 +271,10 @@ function CustomerMenuPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F7FAFC]">
       {/* Header */}
-      <div className="sticky top-0 z-40 border-b bg-white shadow-sm">
-        <div className="container mx-auto max-w-6xl px-4 py-4">
+      <div className="sticky top-0 z-40 border-b border-slate-100 bg-[#F7FAFC]/80 backdrop-blur-md">
+        <div className="container mx-auto max-w-md px-4 py-4 sm:max-w-2xl lg:max-w-5xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {restaurant.logo && (
@@ -300,7 +300,7 @@ function CustomerMenuPageContent() {
             {/* Cart Button */}
             <button
               onClick={() => setShowCart(true)}
-              className="relative rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white transition-colors hover:bg-indigo-700"
+              className="relative hidden items-center rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white shadow-md transition-colors hover:bg-indigo-700 sm:inline-flex"
             >
               <div className="flex items-center gap-2">
                 <ShoppingCart className="h-5 w-5" />
@@ -317,31 +317,31 @@ function CustomerMenuPageContent() {
       </div>
 
       {/* Search Bar */}
-      <div className="border-b bg-white">
-        <div className="container mx-auto max-w-6xl px-4 py-4">
+      <div className="border-b border-slate-100 bg-[#F7FAFC]">
+        <div className="container mx-auto max-w-md px-4 py-4 sm:max-w-2xl lg:max-w-5xl">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search menu items..."
+              placeholder="Search dishes, drinks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-2xl border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
         </div>
       </div>
 
       {/* Category Filter Tabs */}
-      <div className="sticky top-[72px] z-30 border-b bg-white shadow-sm">
-        <div className="container mx-auto max-w-6xl px-4">
-          <div className="flex gap-2 overflow-x-auto py-3">
+      <div className="sticky top-[116px] z-30 border-b border-slate-100 bg-[#F7FAFC]">
+        <div className="container mx-auto max-w-md px-4 sm:max-w-2xl lg:max-w-5xl">
+          <div className="scrollbar-none flex gap-2 overflow-x-auto py-3">
             <button
               onClick={() => setSelectedCategory('all')}
               className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 selectedCategory === 'all'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-white text-gray-700 shadow-sm'
               }`}
             >
               All Items ({categories.reduce((sum, cat) => sum + (cat.items?.length || 0), 0)})
@@ -352,8 +352,8 @@ function CustomerMenuPageContent() {
                 onClick={() => setSelectedCategory(category._id)}
                 className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                   selectedCategory === category._id
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'bg-white text-gray-700 shadow-sm'
                 }`}
               >
                 {category.name} ({category.items?.length || 0})
@@ -364,27 +364,27 @@ function CustomerMenuPageContent() {
       </div>
 
       {/* Menu Categories */}
-      <div className="container mx-auto max-w-6xl px-4 py-8">
+      <div className="container mx-auto max-w-md px-4 py-8 sm:max-w-2xl lg:max-w-5xl">
         {filteredCategories.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Search className="mb-4 h-16 w-16 text-gray-400" />
             <h2 className="mb-2 text-2xl font-semibold text-gray-900">No items found</h2>
-            <p className="text-gray-600">Try adjusting your search</p>
+            <p className="text-gray-600">No items found. Try another category or search term.</p>
           </div>
         ) : (
           <div className="space-y-8">
             {filteredCategories.map((category) => (
               <div key={category._id}>
                 <h2 className="mb-4 text-2xl font-bold text-gray-900">{category.name}</h2>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {category.items?.map((item) => (
                     <div
                       key={item._id}
-                      className="group flex gap-3 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 transition-all hover:shadow-md"
+                      className="group flex gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-transform duration-150 ease-out hover:-translate-y-1 hover:shadow-lg"
                     >
                       {/* Item Image */}
                       {item.images?.[0] && (
-                        <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-gray-100">
                           <Image
                             src={item.images[0]}
                             alt={item.name}
@@ -405,15 +405,15 @@ function CustomerMenuPageContent() {
                       <div className="flex flex-1 flex-col justify-between">
                         <div>
                           <div className="flex items-start justify-between gap-2">
-                            <h3 className="line-clamp-1 font-semibold text-gray-900">
+                            <h3 className="line-clamp-1 text-[16px] font-semibold text-gray-900">
                               {item.name}
                             </h3>
-                            <span className="whitespace-nowrap text-sm font-bold text-indigo-600">
+                            <span className="whitespace-nowrap text-[14px] font-semibold text-indigo-600">
                               {formatPrice(item.priceCents)}
                             </span>
                           </div>
                           {item.description && (
-                            <p className="mt-1 line-clamp-2 text-xs text-gray-600">
+                            <p className="mt-1 line-clamp-2 text-[13px] text-gray-600">
                               {item.description}
                             </p>
                           )}
@@ -430,7 +430,7 @@ function CustomerMenuPageContent() {
                                   handleAddToCart(item, 1);
                                 }
                               }}
-                              className="w-full rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+                              className="flex h-11 w-full items-center justify-center rounded-lg bg-indigo-600 text-[14px] font-medium text-white shadow-sm transition hover:bg-indigo-700 active:scale-95"
                             >
                               <div className="flex items-center justify-center gap-1">
                                 <Plus className="h-3 w-3" />
@@ -440,7 +440,7 @@ function CustomerMenuPageContent() {
                           ) : (
                             <button
                               disabled
-                              className="w-full cursor-not-allowed rounded-md bg-gray-300 px-3 py-1.5 text-sm font-medium text-gray-500"
+                              className="flex h-11 w-full cursor-not-allowed items-center justify-center rounded-lg bg-gray-200 text-[13px] font-medium text-gray-500"
                             >
                               Unavailable
                             </button>
@@ -455,6 +455,20 @@ function CustomerMenuPageContent() {
           </div>
         )}
       </div>
+
+      {/* Floating Cart Button (mobile) */}
+      <button
+        onClick={() => setShowCart(true)}
+        className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 transition active:scale-95 sm:hidden"
+        aria-label={`Cart, ${getTotalItems()} items`}
+      >
+        <ShoppingCart className="h-6 w-6" />
+        {getTotalItems() > 0 && (
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1 text-[11px] font-semibold text-indigo-600">
+            {getTotalItems()}
+          </span>
+        )}
+      </button>
 
       {/* Item Customization Modal */}
       {selectedItem && (
@@ -593,9 +607,9 @@ function CustomerMenuPageContent() {
 
       {/* Cart Drawer */}
       {showCart && (
-        <div className="fixed inset-0 z-50 flex">
+        <div className="fixed inset-0 z-50 flex flex-col">
           <div className="flex-1 bg-black bg-opacity-50" onClick={() => setShowCart(false)}></div>
-          <div className="w-full max-w-md overflow-hidden bg-white shadow-xl">
+          <div className="mx-auto max-h-[80vh] w-full max-w-md overflow-hidden rounded-t-3xl bg-white shadow-2xl">
             {/* Cart Header */}
             <div className="border-b p-6">
               <div className="flex items-center justify-between">
@@ -704,7 +718,9 @@ export const dynamic = 'force-dynamic';
 
 export default function CustomerMenuPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+    <Suspense
+      fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}
+    >
       <CustomerMenuPageContent />
     </Suspense>
   );
