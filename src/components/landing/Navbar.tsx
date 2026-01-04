@@ -16,10 +16,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleAnchorClick = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    selector: string
-  ) => {
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, selector: string) => {
     // Smoothly scroll to in-page anchors and account for fixed navbar using scroll-margin on sections
     if (selector.startsWith('#')) {
       e.preventDefault();
@@ -37,23 +34,25 @@ export default function Navbar() {
   return (
     <nav
       className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-lg'
-          : 'bg-transparent'
+        scrolled ? 'bg-white/95 shadow-lg backdrop-blur-md' : 'bg-transparent'
       }`}
     >
       <div className="container mx-auto flex items-center justify-between px-4 py-4">
         {/* Logo */}
-        <Link href="/" className="group flex items-center gap-2.5 animate-fadeInDown">
+        <Link href="/" className="animate-fadeInDown group flex items-center gap-2.5">
           <div className="relative">
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-orange-500 to-red-600 opacity-20 blur-xl transition-opacity group-hover:opacity-40"></div>
-            <UtensilsCrossed className={`relative h-9 w-9 transition-colors ${
-              scrolled ? 'text-orange-600' : 'text-white drop-shadow-lg'
-            }`} />
+            <UtensilsCrossed
+              className={`relative h-9 w-9 transition-colors ${
+                scrolled ? 'text-orange-600' : 'text-white drop-shadow-lg'
+              }`}
+            />
           </div>
-          <span className={`text-2xl font-bold transition-colors ${
-            scrolled ? 'gradient-text' : 'text-white drop-shadow-lg'
-          }`}>
+          <span
+            className={`text-2xl font-bold transition-colors ${
+              scrolled ? 'gradient-text' : 'text-white drop-shadow-lg'
+            }`}
+          >
             QR Menu Manager
           </span>
         </Link>

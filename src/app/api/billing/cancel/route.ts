@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
-import { getUserFromRequest, verifyUserPassword } from '@/lib/auth';
+import { getUserFromRequest } from '@/lib/auth';
 import Subscription from '@/models/Subscription';
 import CancellationFeedback from '@/models/CancellationFeedback';
 import { getRazorpay } from '@/lib/razorpay';
@@ -18,21 +18,11 @@ export async function POST(request: NextRequest) {
     if (!ownerId) {
       return NextResponse.json({ error: 'Only owner can cancel subscription' }, { status: 403 });
     }
-    
+
     const body = await request.json();
-    const { currentPassword, atPeriodEnd, reason, details } = body || {};
-    
-    if (!currentPassword) {
-      return NextResponse.json({ error: 'Current password required to cancel subscription' }, { status: 400 });
-    }
+    const { atPeriodEnd, reason, details } = body || {};
 
     await dbConnect();
-    
-    // Verify password before proceeding with cancellation
-    const isValidPassword = await verifyUserPassword(user.userId, currentPassword);
-    if (!isValidPassword) {
-      return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 });
-    }
     const sub = await Subscription.findOne({ ownerId });
     if (!sub || !sub.razorpaySubscriptionId) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 404 });
@@ -43,7 +33,7 @@ export async function POST(request: NextRequest) {
       currentStatus: sub.status,
       atPeriodEnd,
       cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
-      currentPeriodEnd: sub.currentPeriodEnd
+      currentPeriodEnd: sub.currentPeriodEnd,
     });
 
     // Persist cancellation feedback (non-blocking if it fails)
@@ -55,7 +45,8 @@ export async function POST(request: NextRequest) {
         interval: sub.interval,
         atPeriodEnd: Boolean(atPeriodEnd),
         reason: typeof reason === 'string' && reason.trim() ? reason.trim() : 'unspecified',
-        details: typeof details === 'string' && details.trim() ? details.trim().slice(0, 2000) : undefined,
+        details:
+          typeof details === 'string' && details.trim() ? details.trim().slice(0, 2000) : undefined,
       });
     } catch (e) {
       console.warn('Failed to save cancellation feedback', e);
@@ -76,15 +67,20 @@ export async function POST(request: NextRequest) {
       // For active subscriptions, use Razorpay cancel API
       const rz = getRazorpay();
       const cancelAtCycleEnd = atPeriodEnd ? 1 : 0;
-      
+
       try {
-        await rz.subscriptions.cancel(sub.razorpaySubscriptionId, { cancel_at_cycle_end: cancelAtCycleEnd } as any);
-        
+        await rz.subscriptions.cancel(sub.razorpaySubscriptionId, {
+          cancel_at_cycle_end: cancelAtCycleEnd,
+        } as any);
+
         if (cancelAtCycleEnd === 1) {
           // Keep active until period end; mark flag
           sub.cancelAtPeriodEnd = true;
           // Status stays 'active' until period end
-          console.log('Subscription cancelled at period end, access continues until:', sub.currentPeriodEnd);
+          console.log(
+            'Subscription cancelled at period end, access continues until:',
+            sub.currentPeriodEnd
+          );
         } else {
           // Immediate cancel
           sub.status = 'cancelled';

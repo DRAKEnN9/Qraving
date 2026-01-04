@@ -72,9 +72,9 @@ export default function BillingPage() {
       setLoading(false);
 
       // Fetch payment history (account-level owner only)
-      if (user?.accountRole === 'owner') {
+      if (user?.accountRole === 'owner' || user?.role === 'owner') {
         setPaymentLoading(true);
-        const paymentResponse = await fetch('/api/billing/payments', {
+        const paymentResponse = await fetch('/api/billing/payments?refresh=true&limit=200', {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (paymentResponse.ok) {

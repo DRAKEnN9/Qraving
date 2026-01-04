@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { AlertCircle, ArrowLeft, Check, Lock } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Check } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export const dynamic = 'force-dynamic';
@@ -36,8 +36,7 @@ export default function CancelSubscriptionPage() {
   const [reason, setReason] = useState('');
   const [details, setDetails] = useState('');
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [password, setPassword] = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -89,14 +88,10 @@ export default function CancelSubscriptionPage() {
       setError('Please select a reason for cancellation');
       return;
     }
-    setShowPassword(true);
+    setShowConfirm(true);
   };
 
   const confirmCancel = async () => {
-    if (!password) {
-      setError('Please enter your current password');
-      return;
-    }
     try {
       setSubmitting(true);
       const token = localStorage.getItem('token');
@@ -107,7 +102,6 @@ export default function CancelSubscriptionPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          currentPassword: password,
           atPeriodEnd,
           reason,
           details,
@@ -115,8 +109,7 @@ export default function CancelSubscriptionPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to cancel subscription');
-      setShowPassword(false);
-      setPassword('');
+      setShowConfirm(false);
       if (!atPeriodEnd) {
         // Immediate cancellation: end access right away and log out
         logout();
@@ -239,35 +232,26 @@ export default function CancelSubscriptionPage() {
               disabled={!canSubmit}
               className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-5 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-50"
             >
-              <Lock className="h-4 w-4" />
               Cancel plan
             </button>
           </div>
         </div>
       </div>
 
-      {showPassword && (
+      {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
             <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
               Confirm cancellation
             </h3>
             <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
-              Please enter your current password to confirm this sensitive operation.
+              This will cancel your subscription
+              {atPeriodEnd ? ' at the end of the current billing period.' : ' immediately.'}
             </p>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              placeholder="Enter your current password"
-              autoFocus
-            />
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
-                  setShowPassword(false);
-                  setPassword('');
+                  setShowConfirm(false);
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
               >
@@ -275,7 +259,7 @@ export default function CancelSubscriptionPage() {
               </button>
               <button
                 onClick={confirmCancel}
-                disabled={!password || submitting}
+                disabled={submitting}
                 className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50"
               >
                 {submitting ? (

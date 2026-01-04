@@ -228,14 +228,6 @@ export default function LoginPage() {
               Sign up
             </Link>
           </div>
-
-          <div className="mt-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-700">
-            <strong>Demo Credentials:</strong>
-            <br />
-            Email: owner@test.com
-            <br />
-            Password: password123
-          </div>
         </div>
 
         <div className="mt-6 text-center">
